@@ -31,7 +31,7 @@ try {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Defectos - Calidad</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -235,7 +235,9 @@ try {
                         showConfirmButton: false
                     });
                     form.reset();
-                    choices.clearStore();
+                    // *** CORRECCIÓN AQUÍ ***
+                    // Resetea la selección del 'choices' al placeholder sin borrar las opciones.
+                    choices.setChoiceByValue('');
                     nominaInput.focus();
                     await cargarDefectosDelDia(); // Recargar la tabla
                 } else {
