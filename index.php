@@ -157,9 +157,18 @@ try {
         const form = document.getElementById('form-defecto');
         const nominaInput = document.getElementById('nomina');
         const tablaBody = document.getElementById('tabla-defectos-body');
+        const selectElement = document.getElementById('codigo-defecto');
+
+        // === INICIO DE LA SOLUCIÓN DEFINITIVA ===
+        // 1. Guardamos una copia de las opciones originales antes de inicializar Choices.js
+        const initialOptions = Array.from(selectElement.options).map(opt => ({
+            value: opt.value,
+            label: opt.innerHTML, // Usamos innerHTML para capturar "codigo - descripcion"
+        }));
+        // === FIN DE LA SOLUCIÓN DEFINITIVA ===
 
         // Inicializar el select con buscador
-        const choices = new Choices('#codigo-defecto', {
+        const choices = new Choices(selectElement, {
             searchEnabled: true,
             itemSelectText: 'Presiona para seleccionar',
             shouldSort: false,
@@ -170,11 +179,10 @@ try {
             try {
                 const response = await fetch('https://grammermx.com/calidad/defectos/dao/obtener_defectos_dia.php');
                 if (!response.ok) throw new Error('Error de red al cargar los datos.');
-
                 const result = await response.json();
 
                 if (result.success) {
-                    tablaBody.innerHTML = ''; // Limpiar tabla antes de llenarla
+                    tablaBody.innerHTML = '';
                     if (result.data.length === 0) {
                         tablaBody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-slate-500">No hay defectos registrados hoy.</td></tr>`;
                     } else {
@@ -233,15 +241,15 @@ try {
                         showConfirmButton: false
                     });
 
-                    // === INICIO DE LA CORRECCIÓN ===
-                    // Se elimina form.reset() y se limpian los campos manualmente
                     document.getElementById('nomina').value = '';
                     document.getElementById('numero-parte').value = '';
                     document.getElementById('estacion').value = '';
 
-                    // Se resetea el select de Choices.js al valor inicial sin borrar las opciones
-                    choices.setChoiceByValue('');
-                    // === FIN DE LA CORRECCIÓN ===
+                    // === INICIO DE LA SOLUCIÓN DEFINITIVA ===
+                    // 2. Restauramos el select a su estado original
+                    choices.clearStore();
+                    choices.setChoices(initialOptions, 'value', 'label', true);
+                    // === FIN DE LA SOLUCIÓN DEFINITIVA ===
 
                     nominaInput.focus();
                     await cargarDefectosDelDia();
