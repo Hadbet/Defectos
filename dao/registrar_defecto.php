@@ -16,33 +16,30 @@ header('Content-Type: application/json');
 include_once('db/db_calidad.php');
 
 // ===================================================================
-// === FUNCIÓN PARA ENVIAR NOTIFICACIÓN A TELEGRAM ===
+// === FUNCIÓN PARA ENVIAR NOTIFICACIÓN A TELEGRAM (VERSIÓN CORREGIDA) ===
 // ===================================================================
 function enviarNotificacionTelegram($codigoDefecto, $numeroParte, $estacion, $totalReportes) {
     // --- CONFIGURACIÓN DE TU BOT ---
-    // Reemplaza estos valores con los de tu bot
-    $botToken = "8390315231:AAGm87Y0iAdVw6dhSTJ3jHIuOchFQA4z8rA"; // El token que te dio BotFather
-    $chatId = "-4789336900";       // El ID de tu grupo (empieza con -)
+    $botToken = "5690772140:AAFQ43z1r7Kgw6BXrkS5URs8KNbbtzHhfbE"; // Token del ejemplo
+    $chatId = "-852982501";       // Chat ID del ejemplo
 
-    // --- CONSTRUCCIÓN DEL MENSAJE ---
-    // Usamos etiquetas HTML sencillas para darle formato al texto
-    $mensaje = "<b>🚨 ¡ALERTA DE DEFECTO RECURRENTE! 🚨</b>\n\n";
+    // --- CONSTRUCCIÓN DEL MENSAJE CON MARKDOWN ---
+    // Usamos asteriscos para negritas y ` para texto monoespaciado
+    $mensaje = "*🚨 ¡ALERTA DE DEFECTO RECURRENTE! 🚨*\n\n";
     $mensaje .= "Se ha detectado una alta recurrencia en un defecto de producción. Se requiere atención inmediata.\n\n";
-    $mensaje .= "<b>Detalles del Defecto:</b>\n";
+    $mensaje .= "*Detalles del Defecto:*\n";
     $mensaje .= "---------------------------------------\n";
-    $mensaje .= "<b>Código:</b> " . htmlspecialchars($codigoDefecto) . "\n";
-    $mensaje .= "<b>No. Parte:</b> " . htmlspecialchars($numeroParte) . "\n";
-    $mensaje .= "<b>Estación:</b> " . htmlspecialchars($estacion) . "\n";
-    $mensaje .= "<b>Total de reportes hoy:</b> " . htmlspecialchars($totalReportes) . "\n";
+    $mensaje .= "*Código:* `" . htmlspecialchars($codigoDefecto) . "`\n";
+    $mensaje .= "*No. Parte:* " . htmlspecialchars($numeroParte) . "\n";
+    $mensaje .= "*Estación:* " . htmlspecialchars($estacion) . "\n";
+    $mensaje .= "*Total de reportes hoy:* *" . htmlspecialchars($totalReportes) . "*\n";
 
-    // Codificamos el mensaje para que sea seguro en una URL
     $mensajeCodificado = urlencode($mensaje);
 
     // --- ENVÍO DE LA NOTIFICACIÓN ---
-    $url = "https://api.telegram.org/bot{$botToken}/sendMessage?chat_id={$chatId}&text={$mensajeCodificado}&parse_mode=HTML";
+    // Cambiamos 'parse_mode' a 'Markdown' para que interprete los asteriscos
+    $url = "https://api.telegram.org/bot{$botToken}/sendMessage?chat_id={$chatId}&text={$mensajeCodificado}&parse_mode=Markdown";
 
-    // Usamos file_get_contents para enviar la petición (simple y efectivo)
-    // @ suprime errores si la API falla, para no romper el JSON de respuesta
     @file_get_contents($url);
 }
 
@@ -89,13 +86,11 @@ try {
 
             // --- Llamada a las funciones de notificación ---
 
-            // 1. Enviar Correo Electrónico (ya existente)
-            // (Aquí iría el código de PHPMailer que ya tienes)
+            // 1. Enviar Correo Electrónico (PHPMailer)
+            // (Tu código de PHPMailer para enviar correos iría aquí, como lo tenías antes)
 
             // 2. Enviar Notificación por Telegram
-            // Para deshabilitar el envío por Telegram, simplemente comenta la siguiente línea:
             enviarNotificacionTelegram($codigoDefecto, $input['numeroParte'], $input['estacion'], $countRow['count']);
-
         }
     } else {
         $response['message'] = 'No se pudo registrar el defecto.';
