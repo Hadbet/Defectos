@@ -1,5 +1,18 @@
 <?php
 // dao/registrar_defecto.php
+
+// --- Integración de PHPMailer ---
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+// Ruta corregida según la estructura de tu servidor.
+// Desde /calidad/defectos/, subimos dos niveles (../../) hasta public_html,
+// y luego bajamos a /Mailer/Phpmailer/
+require __DIR__ . '/../../Mailer/Phpmailer/Exception.php';
+require __DIR__ . '/../../Mailer/Phpmailer/PHPMailer.php';
+require __DIR__ . '/../../Mailer/Phpmailer/SMTP.php';
+// --- Fin de la Integración ---
+
 header('Content-Type: application/json');
 include_once('db/db_calidad.php');
 
@@ -27,7 +40,7 @@ try {
         $response['success'] = true;
         $response['message'] = 'Defecto registrado exitosamente.';
 
-        // --- Lógica de Notificación por Correo ---
+        // --- Lógica de Notificación por Correo con PHPMailer ---
         $codigoDefecto = $input['codigoDefecto'];
 
         // Contar cuántas veces se ha repetido el mismo defecto hoy
@@ -37,34 +50,51 @@ try {
         $result = $countStmt->get_result();
         $countRow = $result->fetch_assoc();
 
-        // Si el defecto se ha registrado exactamente 4 veces, envía el correo.
-        // Esto asegura que el correo se envíe solo una vez cuando se alcanza el umbral.
+        // Si el defecto se ha registrado más de 3 veces, envía el correo.
         if ($countRow && $countRow['count'] > 3) {
-            $to = "hadbet.altamirano@grammer.com";
-            $subject = "Alerta de Defecto Recurrente: " . $codigoDefecto;
-            $message = "
-            <html>
-            <head><title>Alerta de Calidad</title></head>
-            <body>
-            <p>Hola,</p>
-            <p>Se ha detectado una recurrencia en un defecto de producción. Por favor, tomar las acciones correspondientes.</p>
-            <ul>
-                <li><strong>Código de Defecto:</strong> {$codigoDefecto}</li>
-                <li><strong>Número de Parte:</strong> {$input['numeroParte']}</li>
-                <li><strong>Estación:</strong> {$input['estacion']}</li>
-                <li><strong>Fecha:</strong> " . date('Y-m-d') . "</li>
-                <li><strong>Total de reportes hoy:</strong> {$countRow['count']}</li>
-            </ul>
-            <p>Este es un correo generado automáticamente por el Sistema de Registro de Defectos.</p>
-            </body>
-            </html>
-            ";
-            $headers = "MIME-Version: 1.0" . "\r\n";
-            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-            $headers .= 'From: <sistema.calidad@grammer.com>' . "\r\n";
 
-            // Se intenta enviar el correo. El @ suprime errores en caso de que la configuración del servidor de correo falle.
-            @mail($to, $subject, $message, $headers);
+            $mail = new PHPMailer(true);
+
+            try {
+                //Configuración del servidor SMTP
+                $mail->isSMTP();
+                $mail->Host = 'smtp.hostinger.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'kaizen.system@grammermx.com';
+                $mail->Password = 'Grammer2024.';
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                $mail->Port = 465;
+
+                //Destinatarios
+                $mail->setFrom('kaizen.system@grammermx.com', 'Sistema de Calidad Grammer');
+                $mail->addAddress('hadbet.altamirano@grammer.com', 'Hadbet Altamirano');
+
+                //Contenido del correo
+                $mail->isHTML(true);
+                $mail->Subject = utf8_decode("Alerta de Defecto Recurrente: " . $codigoDefecto);
+                $mail->Body    = "
+                <html>
+                <head><title>Alerta de Calidad</title></head>
+                <body style='font-family: sans-serif; color: #333;'>
+                <h2 style='color: #003366;'>Alerta de Defecto Recurrente</h2>
+                <p>Hola,</p>
+                <p>Se ha detectado una recurrencia en un defecto de producción. Por favor, tomar las acciones correspondientes.</p>
+                <ul style='list-style-type: none; padding: 0;'>
+                    <li style='margin-bottom: 10px;'><strong>Código de Defecto:</strong> {$codigoDefecto}</li>
+                    <li style='margin-bottom: 10px;'><strong>Número de Parte:</strong> {$input['numeroParte']}</li>
+                    <li style='margin-bottom: 10px;'><strong>Estación:</strong> {$input['estacion']}</li>
+                    <li style='margin-bottom: 10px;'><strong>Fecha:</strong> " . date('Y-m-d') . "</li>
+                    <li style='margin-bottom: 10px;'><strong>Total de reportes hoy:</strong> {$countRow['count']}</li>
+                </ul>
+                <hr>
+                <p style='font-size: 0.9em; color: #777;'>Este es un correo generado automáticamente por el Sistema de Registro de Defectos.</p>
+                </body>
+                </html>";
+
+                $mail->send();
+            } catch (Exception $e) {
+                // No se detiene el script si el correo falla
+            }
         }
         $countStmt->close();
 
@@ -87,3 +117,4 @@ try {
 
 echo json_encode($response);
 ?>
+
