@@ -76,23 +76,56 @@ try {
 
                 //Contenido del correo
                 $mail->isHTML(true);
-                $mail->Subject = utf8_decode("Alerta de Defecto Recurrente: " . $codigoDefecto);
+                $mail->CharSet = 'UTF-8'; // Corrección para acentos y caracteres especiales
+                $mail->Subject = "Alerta de Defecto Recurrente: " . $codigoDefecto;
                 $mail->Body    = "
                 <html>
-                <head><title>Alerta de Calidad</title></head>
-                <body style='font-family: sans-serif; color: #333;'>
-                <h2 style='color: #D32F2F;'>Alerta de Defecto Recurrente</h2>
-                <p>Hola,</p>
-                <p>Se ha detectado una recurrencia en un defecto de producción. Por favor, tomar las acciones correspondientes.</p>
-                <ul style='list-style-type: none; padding: 0;'>
-                    <li style='margin-bottom: 10px;'><strong>Código de Defecto:</strong> {$codigoDefecto}</li>
-                    <li style='margin-bottom: 10px;'><strong>Número de Parte:</strong> {$input['numeroParte']}</li>
-                    <li style='margin-bottom: 10px;'><strong>Estación:</strong> {$input['estacion']}</li>
-                    <li style='margin-bottom: 10px;'><strong>Fecha:</strong> " . date('Y-m-d') . "</li>
-                    <li style='margin-bottom: 10px;'><strong>Total de reportes hoy:</strong> {$countRow['count']}</li>
-                </ul>
-                <hr>
-                <p style='font-size: 0.9em; color: #777;'>Este es un correo generado automáticamente por el Sistema de Registro de Defectos.</p>
+                <head>
+                <title>Alerta de Calidad</title>
+                <style>
+                    @keyframes blink {
+                        0% { opacity: 1; }
+                        50% { opacity: 0.4; }
+                        100% { opacity: 1; }
+                    }
+                    .blinking-alert {
+                        animation: blink 1.5s linear infinite;
+                    }
+                </style>
+                </head>
+                <body style=\"font-family: 'Inter', sans-serif; background-color: #f1f5f9; padding: 20px; margin: 0;\">
+                    <div style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;\">
+                        <div style=\"background-color: #D32F2F; color: white; padding: 20px; text-align: center;\" class=\"blinking-alert\">
+                            <h1 style=\"margin: 0; font-size: 28px; font-weight: bold;\">¡ALERTA!</h1>
+                        </div>
+                        <div style=\"padding: 30px;\">
+                            <h2 style=\"color: #1e293b; font-size: 22px; margin-top: 0;\">Defecto de Producción Recurrente</h2>
+                            <p style=\"color: #475569; line-height: 1.6;\">
+                                Hola,
+                            </p>
+                            <p style=\"color: #475569; line-height: 1.6;\">
+                                Se ha detectado una alta recurrencia en un defecto de producción. Por favor, tomar las acciones correspondientes de inmediato.
+                            </p>
+                            <div style=\"background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-top: 20px;\">
+                                <h3 style=\"color: #1e293b; margin-top: 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px;\">Detalles del Defecto</h3>
+                                <ul style=\"list-style-type: none; padding: 0; margin: 0;\">
+                                    <li style=\"margin-bottom: 12px; color: #475569;\"><strong>Código de Defecto:</strong> <span style=\"font-weight: bold; color: #D32F2F; font-family: monospace;\">{$codigoDefecto}</span></li>
+                                    <li style=\"margin-bottom: 12px; color: #475569;\"><strong>Número de Parte:</strong> {$input['numeroParte']}</li>
+                                    <li style=\"margin-bottom: 12px; color: #475569;\"><strong>Estación:</strong> {$input['estacion']}</li>
+                                    <li style=\"margin-bottom: 12px; color: #475569;\"><strong>Fecha:</strong> " . date('Y-m-d') . "</li>
+                                    <li style=\"color: #475569;\"><strong>Total de reportes hoy:</strong> <span style=\"background-color: #D32F2F; color: white; padding: 3px 8px; border-radius: 5px; font-weight: bold;\">{$countRow['count']}</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div style=\"background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px; text-align: center;\">
+                            <p style=\"font-size: 0.8em; color: #64748b; margin: 0;\">
+                                Este es un correo generado automáticamente por el Sistema de Registro de Defectos de Calidad.
+                            </p>
+                            <p style=\"font-size: 0.8em; color: #64748b; margin: 5px 0 0;\">
+                                Grammer Automotive &copy; " . date('Y') . "
+                            </p>
+                        </div>
+                    </div>
                 </body>
                 </html>";
 
