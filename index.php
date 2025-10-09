@@ -237,17 +237,20 @@ try {
                     document.getElementById('numero-parte').value = '';
                     document.getElementById('estacion').value = '';
 
-                    // === INICIO DE LA SOLUCIÓN DEFINITIVA: DESTRUIR Y RECREAR ===
-                    // 1. Destruimos la instancia actual de Choices.js
+                    // === INICIO DE LA SOLUCIÓN FINAL ===
+                    // 1. Forzamos el valor del <select> HTML original a su estado inicial.
+                    selectElement.value = '';
+
+                    // 2. Destruimos la instancia de Choices.js
                     choices.destroy();
-                    // 2. Volvemos a inicializar Choices.js en el elemento <select> original.
-                    // Esto lo fuerza a releer las opciones que siempre han estado en el HTML.
+
+                    // 3. Volvemos a inicializar Choices.js, que ahora leerá el <select> reseteado.
                     choices = new Choices(selectElement, {
                         searchEnabled: true,
                         itemSelectText: 'Presiona para seleccionar',
                         shouldSort: false,
                     });
-                    // === FIN DE LA SOLUCIÓN DEFINITIVA ===
+                    // === FIN DE LA SOLUCIÓN FINAL ===
 
                     nominaInput.focus();
                     await cargarDefectosDelDia();
