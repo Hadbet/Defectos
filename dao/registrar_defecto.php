@@ -20,8 +20,8 @@ include_once('db/db_calidad.php');
 // ===================================================================
 function enviarNotificacionTelegram($codigoDefecto, $numeroParte, $estacion, $totalReportes) {
     // --- CONFIGURACIÓN DE TU BOT ---
-    $botToken = "5690772140:AAFQ43z1r7Kgw6BXrkS5URs8KNbbtzHhfbE"; // Token del ejemplo
-    $chatId = "-852982501";       // Chat ID del ejemplo
+    $botToken = "8390315231:AAGm87Y0iAdVw6dhSTJ3jHIuOchFQA4z8rA"; // Token del ejemplo
+    $chatId = "-4789336900";       // Chat ID del ejemplo
 
     // --- CONSTRUCCIÓN DEL MENSAJE CON MARKDOWN ---
     // Usamos asteriscos para negritas y ` para texto monoespaciado
