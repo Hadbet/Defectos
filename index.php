@@ -23,7 +23,6 @@ try {
 
 } catch (Exception $e) {
     // En caso de error, el catálogo quedará vacío y el select no mostrará opciones.
-    // Se podría agregar un mensaje de error si fuera necesario.
     die("Error al conectar con la base de datos para cargar el catálogo de defectos: " . $e->getMessage());
 }
 ?>
@@ -211,7 +210,6 @@ try {
                 codigoDefecto: choices.getValue(true)
             };
 
-            // Mostrar spinner de carga en el botón
             const submitButton = form.querySelector('button[type="submit"]');
             const originalButtonText = submitButton.innerHTML;
             submitButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Registrando...`;
@@ -234,12 +232,19 @@ try {
                         timer: 1500,
                         showConfirmButton: false
                     });
-                    form.reset();
-                    // *** CORRECCIÓN AQUÍ ***
-                    // Resetea la selección del 'choices' al placeholder sin borrar las opciones.
+
+                    // === INICIO DE LA CORRECCIÓN ===
+                    // Se elimina form.reset() y se limpian los campos manualmente
+                    document.getElementById('nomina').value = '';
+                    document.getElementById('numero-parte').value = '';
+                    document.getElementById('estacion').value = '';
+
+                    // Se resetea el select de Choices.js al valor inicial sin borrar las opciones
                     choices.setChoiceByValue('');
+                    // === FIN DE LA CORRECCIÓN ===
+
                     nominaInput.focus();
-                    await cargarDefectosDelDia(); // Recargar la tabla
+                    await cargarDefectosDelDia();
                 } else {
                     throw new Error(result.message || 'Ocurrió un error desconocido.');
                 }
@@ -250,13 +255,11 @@ try {
                     text: error.message
                 });
             } finally {
-                // Restaurar botón
                 submitButton.innerHTML = originalButtonText;
                 submitButton.disabled = false;
             }
         });
 
-        // Carga inicial de datos
         cargarDefectosDelDia();
         nominaInput.focus();
     });
