@@ -63,10 +63,14 @@ try {
         throw new Exception("Error al conectar a la base de datos: " . mysqli_connect_error());
     }
 
+    $Object = new DateTime();
+    $Object->setTimezone(new DateTimeZone('America/Denver')); // Considera usar 'America/Mexico_City' si aplica
+    $DateAndTime = $Object->format("Y-m-d H:i:s");
+
     $conex->begin_transaction();
 
-    $stmt = $conex->prepare("INSERT INTO Defectos (Nomina, NumeroParte, Estacion, CodigoDefecto, Fecha) VALUES (?, ?, ?, ?, NOW())");
-    $stmt->bind_param("sssi", $input['nomina'], $input['numeroParte'], $input['estacion'], $input['codigoDefecto']);
+    $stmt = $conex->prepare("INSERT INTO Defectos (Nomina, NumeroParte, Estacion, CodigoDefecto, Fecha) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssis", $input['nomina'], $input['numeroParte'], $input['estacion'], $input['codigoDefecto'],$DateAndTime);
     $stmt->execute();
 
     if ($stmt->affected_rows > 0) {
