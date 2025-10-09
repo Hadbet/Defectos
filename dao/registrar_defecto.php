@@ -38,7 +38,7 @@ function enviarNotificacionTelegram($codigoDefecto, $numeroParte, $estacion, $to
 
     // --- ENVÍO DE LA NOTIFICACIÓN ---
     // Cambiamos 'parse_mode' a 'Markdown' para que interprete los asteriscos
-    $url = "https://api.telegram.org/bot{$botToken}/sendMessage?chat_id={$chatId}&text={$mensajeCodificado}&parse_mode=Markdown";
+    $url = "https://api.telegram.org/bot{$botToken}/sendMessage?chat_id={$chatId}&text=hola&parse_mode=Markdown";
 
     @file_get_contents($url);
 }
