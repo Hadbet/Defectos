@@ -159,8 +159,7 @@ try {
         const tablaBody = document.getElementById('tabla-defectos-body');
         const selectElement = document.getElementById('codigo-defecto');
 
-        // Se cambia a 'let' para poder reasignarla
-        let choices = new Choices(selectElement, {
+        const choices = new Choices(selectElement, {
             searchEnabled: true,
             itemSelectText: 'Presiona para seleccionar',
             shouldSort: false,
@@ -237,20 +236,10 @@ try {
                     document.getElementById('numero-parte').value = '';
                     document.getElementById('estacion').value = '';
 
-                    // === INICIO DE LA SOLUCIÓN FINAL ===
-                    // 1. Forzamos el valor del <select> HTML original a su estado inicial.
-                    selectElement.value = '';
-
-                    // 2. Destruimos la instancia de Choices.js
-                    choices.destroy();
-
-                    // 3. Volvemos a inicializar Choices.js, que ahora leerá el <select> reseteado.
-                    choices = new Choices(selectElement, {
-                        searchEnabled: true,
-                        itemSelectText: 'Presiona para seleccionar',
-                        shouldSort: false,
-                    });
-                    // === FIN DE LA SOLUCIÓN FINAL ===
+                    // === INICIO DE LA SOLUCIÓN SIMPLE Y DIRECTA ===
+                    // Se resetea la selección al valor del placeholder.
+                    choices.setChoiceByValue('');
+                    // === FIN DE LA SOLUCIÓN SIMPLE Y DIRECTA ===
 
                     nominaInput.focus();
                     await cargarDefectosDelDia();
