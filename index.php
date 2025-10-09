@@ -34,16 +34,24 @@ try {
     <title>Registro de Defectos - Calidad</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
-    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <!-- Librería nueva: Tom Select -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .choices__input { background-color: #f8fafc !important; }
-        .choices__list--dropdown { background-color: #f8fafc; border-color: #cbd5e1;}
-        .choices__item--choice { color: #334155; }
-        .choices[data-type*="select-one"]::after { border-color: #334155 transparent transparent; }
-        .is-focused .choices__inner { border-color: #3b82f6 !important; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4) !important;}
+        /* Estilos para Tom Select para que se parezca al anterior */
+        .ts-control {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            padding-top: 0.6rem !important;
+            padding-bottom: 0.6rem !important;
+        }
+        .ts-control.focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4) !important;
+        }
+        .ts-dropdown { background-color: #f8fafc; border-color: #cbd5e1;}
         .swal2-popup { font-family: 'Inter', sans-serif; }
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -159,10 +167,13 @@ try {
         const tablaBody = document.getElementById('tabla-defectos-body');
         const selectElement = document.getElementById('codigo-defecto');
 
-        const choices = new Choices(selectElement, {
-            searchEnabled: true,
-            itemSelectText: 'Presiona para seleccionar',
-            shouldSort: false,
+        // Inicializamos la nueva librería Tom Select
+        const tomSelect = new TomSelect(selectElement, {
+            create: false,
+            sortField: {
+                field: "text",
+                direction: "asc"
+            }
         });
 
         // Función para cargar los defectos del día en la tabla
@@ -206,7 +217,7 @@ try {
                 nomina: document.getElementById('nomina').value,
                 numeroParte: document.getElementById('numero-parte').value,
                 estacion: document.getElementById('estacion').value,
-                codigoDefecto: choices.getValue(true)
+                codigoDefecto: tomSelect.getValue()
             };
 
             const submitButton = form.querySelector('button[type="submit"]');
@@ -236,10 +247,10 @@ try {
                     document.getElementById('numero-parte').value = '';
                     document.getElementById('estacion').value = '';
 
-                    // === INICIO DE LA SOLUCIÓN SIMPLE Y DIRECTA ===
-                    // Se resetea la selección al valor del placeholder.
-                    //choices.setChoiceByValue('');
-                    // === FIN DE LA SOLUCIÓN SIMPLE Y DIRECTA ===
+                    // === SOLUCIÓN CON TOM SELECT ===
+                    // El método .clear() funciona de manera confiable en esta librería.
+                    tomSelect.clear();
+                    // === FIN DE LA SOLUCIÓN ===
 
                     nominaInput.focus();
                     await cargarDefectosDelDia();
