@@ -1,26 +1,27 @@
 <?php
-// dao/registrar_defecto.php
+// Muestra todos los errores de PHP (útil para depurar, se debe quitar en producción)
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
 // --- Integración de PHPMailer ---
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Ruta corregida según la estructura de tu servidor.
-// Desde /calidad/defectos/, subimos dos niveles (../../) hasta public_html,
-// y luego bajamos a /Mailer/Phpmailer/
-require __DIR__ . '/../../Mailer/Phpmailer/Exception.php';
-require __DIR__ . '/../../Mailer/Phpmailer/PHPMailer.php';
-require __DIR__ . '/../../Mailer/Phpmailer/SMTP.php';
+// Ruta corregida: Desde /dao/, subimos 3 niveles (../../../) para llegar a public_html
+require __DIR__ . '/../../../Mailer/Phpmailer/Exception.php';
+require __DIR__ . '/../../../Mailer/Phpmailer/PHPMailer.php';
+require __DIR__ . '/../../../Mailer/Phpmailer/SMTP.php';
 // --- Fin de la Integración ---
 
 header('Content-Type: application/json');
+// Ruta corregida: Desde /dao/, subimos 1 nivel (../) para encontrar la carpeta /db/
 include_once('db/db_calidad.php');
 
 $response = ['success' => false, 'message' => ''];
 $input = json_decode(file_get_contents('php://input'), true);
 
-if (empty($input) || !isset($input['nomina'], $input['numeroParte'], $input['estacion'], $input['codigoDefecto'])) {
-    $response['message'] = 'Datos incompletos para el registro.';
+if (empty($input) || !isset($input['nomina'], $input['numeroParte'], $input['estacion']) || empty($input['codigoDefecto'])) {
+    $response['message'] = 'Datos incompletos para el registro. Asegúrate de seleccionar un defecto.';
     echo json_encode($response);
     exit;
 }
@@ -28,6 +29,9 @@ if (empty($input) || !isset($input['nomina'], $input['numeroParte'], $input['est
 try {
     $con = new LocalConector();
     $conex = $con->conectar();
+    if (!$conex) {
+        throw new Exception("Error al conectar a la base de datos: " . mysqli_connect_error());
+    }
 
     $conex->begin_transaction();
 
@@ -49,9 +53,10 @@ try {
         $countStmt->execute();
         $result = $countStmt->get_result();
         $countRow = $result->fetch_assoc();
+        $countStmt->close();
 
-        // Si el defecto se ha registrado más de 3 veces, envía el correo.
-        if ($countRow && $countRow['count'] > 3) {
+        // Si el defecto se ha registrado 3 o más veces, envía el correo.
+        if ($countRow && $countRow['count'] >= 3) {
 
             $mail = new PHPMailer(true);
 
@@ -76,7 +81,7 @@ try {
                 <html>
                 <head><title>Alerta de Calidad</title></head>
                 <body style='font-family: sans-serif; color: #333;'>
-                <h2 style='color: #003366;'>Alerta de Defecto Recurrente</h2>
+                <h2 style='color: #D32F2F;'>Alerta de Defecto Recurrente</h2>
                 <p>Hola,</p>
                 <p>Se ha detectado una recurrencia en un defecto de producción. Por favor, tomar las acciones correspondientes.</p>
                 <ul style='list-style-type: none; padding: 0;'>
@@ -93,11 +98,10 @@ try {
 
                 $mail->send();
             } catch (Exception $e) {
-                // No se detiene el script si el correo falla
+                // Si el correo falla, no detenemos el proceso, pero podemos registrar el error si es necesario.
+                $response['mail_error'] = "El defecto se registró, pero el correo no pudo ser enviado. Error: {$mail->ErrorInfo}";
             }
         }
-        $countStmt->close();
-
     } else {
         $response['message'] = 'No se pudo registrar el defecto.';
         $conex->rollback();
@@ -110,6 +114,7 @@ try {
 } catch (Exception $e) {
     http_response_code(500);
     $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
+    // Asegurarse de que $conex existe antes de usarlo
     if (isset($conex) && $conex->ping()) {
         $conex->rollback();
     }
