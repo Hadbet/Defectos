@@ -19,9 +19,12 @@ include_once('db/db_calidad.php');
 // === FUNCIÓN PARA ENVIAR NOTIFICACIÓN A TELEGRAM (VERSIÓN CORREGIDA) ===
 // ===================================================================
 function enviarNotificacionTelegram($codigoDefecto, $numeroParte, $estacion, $totalReportes) {
-    $botToken = "5690772140:AAFQ43z1r7Kgw6BXrkS5URs8KNbbtzHhfbE";
-    $chatId = "-852982501";
+    // --- CONFIGURACIÓN DE TU BOT ---
+    $botToken = "5690772140:AAFQ43z1r7Kgw6BXrkS5URs8KNbbtzHhfbE"; // Token del ejemplo
+    $chatId = "-852982501";       // Chat ID del ejemplo
 
+    // --- CONSTRUCCIÓN DEL MENSAJE CON MARKDOWN ---
+    // Usamos asteriscos para negritas y ` para texto monoespaciado
     $mensaje = "*🚨 ¡ALERTA DE DEFECTO RECURRENTE! 🚨*\n\n";
     $mensaje .= "Se ha detectado una alta recurrencia en un defecto de producción. Se requiere atención inmediata.\n\n";
     $mensaje .= "*Detalles del Defecto:*\n";
@@ -31,27 +34,13 @@ function enviarNotificacionTelegram($codigoDefecto, $numeroParte, $estacion, $to
     $mensaje .= "*Estación:* " . htmlspecialchars($estacion) . "\n";
     $mensaje .= "*Total de reportes hoy:* *" . htmlspecialchars($totalReportes) . "*\n";
 
-    // No es necesario codificar el mensaje para cURL
+    $mensajeCodificado = urlencode($mensaje);
 
-    $url = "https://api.telegram.org/bot{$botToken}/sendMessage";
+    // --- ENVÍO DE LA NOTIFICACIÓN ---
+    // Cambiamos 'parse_mode' a 'Markdown' para que interprete los asteriscos
+    $url = "https://api.telegram.org/bot{$botToken}/sendMessage?chat_id={$chatId}&text=hola&parse_mode=Markdown";
 
-    $post_fields = [
-        'chat_id' => $chatId,
-        'text' => $mensaje,
-        'parse_mode' => 'Markdown'
-    ];
-
-    // --- ENVÍO DE LA NOTIFICACIÓN USANDO cURL ---
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type:multipart/form-data"));
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_fields);
-
-    // Ejecutar la petición
-    curl_exec($ch);
-    // Cerrar la conexión
-    curl_close($ch);
+    @file_get_contents($url);
 }
 
 // ===================================================================
