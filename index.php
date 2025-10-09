@@ -238,7 +238,7 @@ try {
 
                     // === INICIO DE LA SOLUCIÓN SIMPLE Y DIRECTA ===
                     // Se resetea la selección al valor del placeholder.
-                    //choices.setChoiceByValue('');
+                    choices.setChoiceByValue('');
                     // === FIN DE LA SOLUCIÓN SIMPLE Y DIRECTA ===
 
                     nominaInput.focus();
