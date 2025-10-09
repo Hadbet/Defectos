@@ -159,16 +159,8 @@ try {
         const tablaBody = document.getElementById('tabla-defectos-body');
         const selectElement = document.getElementById('codigo-defecto');
 
-        // === INICIO DE LA SOLUCIÓN DEFINITIVA ===
-        // 1. Guardamos una copia de las opciones originales antes de inicializar Choices.js
-        const initialOptions = Array.from(selectElement.options).map(opt => ({
-            value: opt.value,
-            label: opt.innerHTML, // Usamos innerHTML para capturar "codigo - descripcion"
-        }));
-        // === FIN DE LA SOLUCIÓN DEFINITIVA ===
-
-        // Inicializar el select con buscador
-        const choices = new Choices(selectElement, {
+        // Se cambia a 'let' para poder reasignarla
+        let choices = new Choices(selectElement, {
             searchEnabled: true,
             itemSelectText: 'Presiona para seleccionar',
             shouldSort: false,
@@ -245,10 +237,16 @@ try {
                     document.getElementById('numero-parte').value = '';
                     document.getElementById('estacion').value = '';
 
-                    // === INICIO DE LA SOLUCIÓN DEFINITIVA ===
-                    // 2. Restauramos el select a su estado original
-                    choices.clearStore();
-                    choices.setChoices(initialOptions, 'value', 'label', true);
+                    // === INICIO DE LA SOLUCIÓN DEFINITIVA: DESTRUIR Y RECREAR ===
+                    // 1. Destruimos la instancia actual de Choices.js
+                    choices.destroy();
+                    // 2. Volvemos a inicializar Choices.js en el elemento <select> original.
+                    // Esto lo fuerza a releer las opciones que siempre han estado en el HTML.
+                    choices = new Choices(selectElement, {
+                        searchEnabled: true,
+                        itemSelectText: 'Presiona para seleccionar',
+                        shouldSort: false,
+                    });
                     // === FIN DE LA SOLUCIÓN DEFINITIVA ===
 
                     nominaInput.focus();
