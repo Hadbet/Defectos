@@ -16,6 +16,9 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- SweetAlert2 para notificaciones -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Tom Select para filtros avanzados -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .fade-in-up {
@@ -25,6 +28,28 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        /* Estilos para la tabla animada y mejorada */
+        #tabla-body tr {
+            opacity: 0;
+            animation: tableRowIn 0.5s ease-out forwards;
+        }
+        @keyframes tableRowIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        /* Estilos para Tom Select */
+        .ts-control {
+            background-color: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            padding-top: 0.4rem !important;
+            padding-bottom: 0.4rem !important;
         }
     </style>
 </head>
@@ -84,7 +109,11 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
         <!-- Gráficos -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200/50">
-                <h2 class="text-xl font-bold text-slate-700 mb-4">Total de Defectos por Tipo</h2>
+                <h2 class="text-xl font-bold text-slate-700 mb-2">Total de Defectos por Tipo</h2>
+                <div class="mb-4">
+                    <label for="filtro-defecto" class="block text-sm font-medium text-slate-600 mb-1">Filtrar por defecto:</label>
+                    <select id="filtro-defecto" multiple placeholder="Selecciona uno o más defectos..."></select>
+                </div>
                 <canvas id="grafico-defectos-tipo"></canvas>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200/50">
@@ -97,7 +126,7 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
         <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200/50">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-slate-700">Registros Detallados</h2>
-                <button id="btn-exportar" class="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors">
+                <button id="btn-exportar" class="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50" disabled>
                     Exportar a Excel
                 </button>
             </div>
@@ -105,15 +134,15 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
                 <table id="tabla-registros" class="w-full text-left">
                     <thead class="bg-slate-50">
                     <tr>
-                        <th class="p-3 text-sm font-semibold text-slate-600">ID</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Fecha</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Línea</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Nómina</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">No. Parte</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Estación</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Defecto</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Estado</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Comentarios</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">ID</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Fecha</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Línea</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Nómina</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">No. Parte</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Estación</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Defecto</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Estado</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Comentarios</th>
                     </tr>
                     </thead>
                     <tbody id="tabla-body">
@@ -127,23 +156,28 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Inicialización de gráficos (vacíos al principio)
         let graficoTipo, graficoMes;
+        let datosCompletos = { defectosPorTipo: [] }; // Almacén para los datos completos
 
-        // --- CONFIGURACIÓN INICIAL ---
         const fechaFinInput = document.getElementById('fecha-fin');
         const fechaInicioInput = document.getElementById('fecha-inicio');
+        const btnExportar = document.getElementById('btn-exportar');
 
-        // Poner fechas por defecto (hoy y primer día del mes)
+        // Configurar fechas por defecto
         const hoy = new Date();
         const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
         fechaFinInput.value = hoy.toISOString().split('T')[0];
         fechaInicioInput.value = primerDiaMes.toISOString().split('T')[0];
 
-        // --- FUNCIONES DE GRÁFICOS Y TABLA ---
+        // Inicializar Tom Select para el filtro de defectos
+        const tomSelectFiltroDefectos = new TomSelect('#filtro-defecto', {
+            plugins: ['remove_button'],
+            create: false,
+        });
+
         const renderizarGraficoTipo = (data) => {
             const ctx = document.getElementById('grafico-defectos-tipo').getContext('2d');
-            if (graficoTipo) graficoTipo.destroy(); // Destruir gráfico anterior
+            if (graficoTipo) graficoTipo.destroy();
             graficoTipo = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -156,7 +190,7 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
                         borderWidth: 1
                     }]
                 },
-                options: { indexAxis: 'y', responsive: true }
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
             });
         };
 
@@ -170,14 +204,14 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
                     datasets: [{
                         label: 'Defectos Registrados',
                         data: data.map(d => d.Total),
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         borderColor: 'rgba(239, 68, 68, 1)',
                         borderWidth: 2,
                         fill: true,
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         tension: 0.3
                     }]
                 },
-                options: { responsive: true }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         };
 
@@ -187,27 +221,37 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
             tablaBody.innerHTML = '';
             if (data.length === 0) {
                 tablaBody.innerHTML = `<tr><td colspan="9" class="text-center p-6 text-slate-500">No se encontraron registros con los filtros seleccionados.</td></tr>`;
+                btnExportar.disabled = true;
                 return;
             }
-            data.forEach(row => {
+            btnExportar.disabled = false;
+            data.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                tr.className = 'border-b border-slate-200 hover:bg-slate-50';
+                tr.className = 'border-b border-slate-200/80 even:bg-slate-50/50 hover:bg-blue-50/80';
+                tr.style.animationDelay = `${index * 0.03}s`;
                 tr.innerHTML = `
-                <td class="p-3">${row.IdDefecto}</td>
-                <td class="p-3">${row.Fecha}</td>
-                <td class="p-3">${row.Linea}</td>
-                <td class="p-3">${row.Nomina}</td>
-                <td class="p-3">${row.NumeroParte}</td>
-                <td class="p-3">${row.Estacion}</td>
-                <td class="p-3">${row.CodigoDefecto} - ${row.DescripcionDefecto}</td>
-                <td class="p-3">${estados[row.Status] || 'N/A'}</td>
-                <td class="p-3">${row.Comentarios || ''}</td>
+                <td class="p-3 text-sm">${row.IdDefecto}</td>
+                <td class="p-3 text-sm">${row.Fecha}</td>
+                <td class="p-3 text-sm">${row.Linea}</td>
+                <td class="p-3 text-sm">${row.Nomina}</td>
+                <td class="p-3 text-sm">${row.NumeroParte}</td>
+                <td class="p-3 text-sm">${row.Estacion}</td>
+                <td class="p-3 text-sm">${row.CodigoDefecto} - ${row.DescripcionDefecto}</td>
+                <td class="p-3 text-sm">${estados[row.Status] || 'N/A'}</td>
+                <td class="p-3 text-sm">${row.Comentarios || ''}</td>
             `;
                 tablaBody.appendChild(tr);
             });
         };
 
-        // --- FUNCIÓN PRINCIPAL PARA OBTENER DATOS ---
+        const poblarFiltroDefectos = (data) => {
+            tomSelectFiltroDefectos.clear();
+            tomSelectFiltroDefectos.clearOptions();
+            const opciones = data.map(defecto => ({ value: defecto.Descripcion, text: defecto.Descripcion }));
+            tomSelectFiltroDefectos.addOptions(opciones);
+            tomSelectFiltroDefectos.enable();
+        };
+
         const consultarDatos = async () => {
             const fechaInicio = fechaInicioInput.value;
             const fechaFin = fechaFinInput.value;
@@ -218,21 +262,22 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
                 return;
             }
 
-            // Mostrar carga
             const btn = document.getElementById('btn-consultar');
             btn.disabled = true;
             btn.innerHTML = 'Consultando...';
+            tomSelectFiltroDefectos.disable();
 
             try {
                 const response = await fetch(`https://grammermx.com/calidad/defectos/dao/obtener_reportes.php?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&linea=${linea}`);
+                if (!response.ok) throw new Error('Error de red al consultar los datos.');
                 const result = await response.json();
-
                 if (!result.success) throw new Error(result.message);
 
-                // Renderizar todo con los nuevos datos
-                renderizarGraficoTipo(result.data.defectosPorTipo);
-                renderizarGraficoMes(result.data.defectosPorMes);
-                poblarTabla(result.data.tablaRegistros);
+                datosCompletos = result.data; // Guardar datos para filtrar localmente
+                renderizarGraficoTipo(datosCompletos.defectosPorTipo);
+                renderizarGraficoMes(datosCompletos.defectosPorMes);
+                poblarTabla(datosCompletos.tablaRegistros);
+                poblarFiltroDefectos(datosCompletos.defectosPorTipo);
 
             } catch (error) {
                 Swal.fire('Error', `No se pudieron cargar los datos: ${error.message}`, 'error');
@@ -242,18 +287,25 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
             }
         };
 
-        // --- EVENT LISTENERS ---
+        // Event listener para el filtro de defectos del gráfico
+        tomSelectFiltroDefectos.on('change', (values) => {
+            const datosFiltrados = (values.length === 0)
+                ? datosCompletos.defectosPorTipo
+                : datosCompletos.defectosPorTipo.filter(d => values.includes(d.Descripcion));
+            renderizarGraficoTipo(datosFiltrados);
+        });
+
         document.getElementById('btn-consultar').addEventListener('click', consultarDatos);
 
-        document.getElementById('btn-exportar').addEventListener('click', () => {
+        btnExportar.addEventListener('click', () => {
             const tabla = document.getElementById('tabla-registros');
             const wb = XLSX.utils.table_to_book(tabla, { sheet: "Registros" });
             XLSX.writeFile(wb, "Reporte_Defectos.xlsx");
         });
 
-        // Carga inicial de datos al entrar a la página
-        consultarDatos();
+        consultarDatos(); // Carga inicial de datos
     });
 </script>
 </body>
 </html>
+

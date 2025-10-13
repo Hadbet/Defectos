@@ -96,7 +96,7 @@ try {
             <div class="flex items-center">
                 <a href="index.php" class="flex-shrink-0 font-bold text-xl text-blue-600">GRAMMER</a>
                 <div class="ml-10 flex items-baseline space-x-4">
-                    <a href="index.php" class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium" aria-current="page">>Inicio</a>
+                    <a href="index.php" class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Inicio</a>
                     <a href="reportes.php" class="text-slate-500 hover:bg-blue-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Reportes</a>
                 </div>
             </div>
