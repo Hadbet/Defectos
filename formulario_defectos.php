@@ -38,29 +38,53 @@ try {
         body {
             font-family: 'Inter', sans-serif;
         }
+
         .ts-control {
             background-color: #f8fafc !important;
             border-color: #cbd5e1 !important;
             padding: 0.6rem !important;
         }
+
         .ts-control.focus {
             border-color: #3b82f6 !important;
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4) !important;
         }
+
         .ts-dropdown {
             background-color: #f8fafc;
             border-color: #cbd5e1;
         }
+
         .fade-in {
             animation: fadeIn 0.5s ease-in-out;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        .table-row-liberado {
+
+        .table-row-status-1 {
+            background-color: #fefce8 !important;
+        }
+
+        /* Amarillo para Retrabajo */
+        .table-row-status-2 {
+            background-color: #fee2e2 !important;
+        }
+
+        /* Rojo para Scrap */
+        .table-row-status-3 {
             background-color: #f0fdf4 !important;
         }
+
+        /* Verde para Liberado */
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -82,6 +106,7 @@ try {
 <!-- Contenido Principal -->
 <main class="py-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Formulario y Tabla de Defectos (código HTML sin cambios) -->
         <div class="text-center mb-12 fade-in">
             <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800">Registro de Defectos de Producción</h1>
             <p class="mt-3 max-w-2xl mx-auto text-lg text-slate-500">Introduce los datos para registrar un nuevo defecto
@@ -177,7 +202,14 @@ try {
                     } else {
                         result.data.forEach(defecto => {
                             const row = document.createElement('tr');
-                            row.className = `border-b border-slate-200/80 hover:bg-slate-50/80 ${defecto.Status == 1 ? 'table-row-liberado' : ''}`;
+                            // Asignar clase de color según el Status
+                            const statusClass = {
+                                1: 'table-row-status-1', // Retrabajo
+                                2: 'table-row-status-2', // Scrap
+                                3: 'table-row-status-3'  // Liberado
+                            }[defecto.Status] || '';
+
+                            row.className = `border-b border-slate-200/80 hover:bg-slate-50/80 ${statusClass}`;
                             row.dataset.id = defecto.IdDefecto;
                             row.innerHTML = `
                             <td class="p-4 text-slate-500">${defecto.Hora}</td>
@@ -196,132 +228,153 @@ try {
                         });
                     }
                 }
-                } catch (error) {
-                    tablaBody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-red-500">Error: ${error.message}</td></tr>`;
-                }
-            };
+            } catch (error) {
+                tablaBody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-red-500">Error: ${error.message}</td></tr>`;
+            }
+        };
 
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const datos = {
-                    linea: linea,
-                    nomina: document.getElementById('nomina').value,
-                    numeroParte: document.getElementById('numero-parte').value,
-                    estacion: document.getElementById('estacion').value,
-                    codigoDefecto: tomSelect.getValue()
-                };
-                try {
-                    const response = await fetch('https://grammermx.com/calidad/defectos/dao/registrar_defecto.php', {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const datos = {
+                linea: linea,
+                nomina: document.getElementById('nomina').value,
+                numeroParte: document.getElementById('numero-parte').value,
+                estacion: document.getElementById('estacion').value,
+                codigoDefecto: tomSelect.getValue()
+            };
+            try {
+                const response = await fetch('https://grammermx.com/calidad/defectos/dao/registrar_defecto.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(datos)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Registrado!',
+                        text: result.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    form.reset();
+                    tomSelect.clear();
+                    nominaInput.focus();
+                    await cargarDefectosDelDia();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                Swal.fire({icon: 'error', title: 'Error', text: error.message});
+            }
+        });
+
+        tablaBody.addEventListener('click', async (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
+
+            const row = button.closest('tr');
+            const id = row.dataset.id;
+
+            if (button.classList.contains('btn-eliminar')) {
+                const result = await Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "¡No podrás revertir esta acción!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Sí, ¡eliminar!'
+                });
+                if (result.isConfirmed) {
+                    fetch('https://grammermx.com/calidad/defectos/dao/eliminar_defecto.php', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(datos)
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Registrado!',
-                            text: result.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                        form.reset();
-                        tomSelect.clear();
-                        nominaInput.focus();
-                        await cargarDefectosDelDia();
-                    } else {
-                        throw new Error(result.message);
-                    }
-                } catch (error) {
-                    Swal.fire({icon: 'error', title: 'Error', text: error.message});
+                        body: JSON.stringify({id})
+                    })
+                        .then(res => res.json()).then(data => {
+                        if (data.success) {
+                            Swal.fire('¡Eliminado!', data.message, 'success');
+                            cargarDefectosDelDia();
+                        } else throw new Error(data.message);
+                    }).catch(err => Swal.fire('Error', err.message, 'error'));
                 }
-            });
-
-            tablaBody.addEventListener('click', async (e) => {
-                const button = e.target.closest('button');
-                if (!button) return;
-
-                const row = button.closest('tr');
-                const id = row.dataset.id;
-
-                if (button.classList.contains('btn-eliminar')) {
-                    const result = await Swal.fire({
-                        title: '¿Estás seguro?',
-                        text: "¡No podrás revertir esta acción!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        confirmButtonText: 'Sí, ¡eliminar!'
-                    });
-                    if (result.isConfirmed) {
-                        fetch('https://grammermx.com/calidad/defectos/dao/eliminar_defecto.php', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({id})
-                        })
-                            .then(res => res.json()).then(data => {
-                            if (data.success) {
-                                Swal.fire('¡Eliminado!', data.message, 'success');
-                                cargarDefectosDelDia();
-                            } else throw new Error(data.message);
-                        }).catch(err => Swal.fire('Error', err.message, 'error'));
+            } else if (button.classList.contains('btn-liberar')) {
+                const {value: formValues} = await Swal.fire({
+                    title: 'Disposición del Defecto',
+                    html: `
+                        <div class="text-left">
+                            <label for="swal-status" class="swal2-label">Acción a tomar:</label>
+                            <select id="swal-status" class="swal2-select">
+                                <option value="1">Retrabajo</option>
+                                <option value="2">Scrap</option>
+                                <option value="3">Liberado</option>
+                            </select>
+                            <label for="swal-comentario" class="swal2-label mt-4">Comentarios (Opcional):</label>
+                            <textarea id="swal-comentario" class="swal2-textarea" placeholder="Añade una nota..."></textarea>
+                        </div>`,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar Disposición',
+                    preConfirm: () => {
+                        const status = document.getElementById('swal-status').value;
+                        if (!status) {
+                            Swal.showValidationMessage('Debes seleccionar una acción');
+                            return false;
+                        }
+                        return {
+                            status: status,
+                            comentario: document.getElementById('swal-comentario').value
+                        }
                     }
-                } else if (button.classList.contains('btn-liberar')) {
-                    const result = await Swal.fire({
-                        title: '¿Liberar registro?',
-                        text: "Esto marcará el defecto como revisado.",
-                        icon: 'info',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'Sí, ¡liberar!'
-                    });
-                    if (result.isConfirmed) {
-                        fetch('https://grammermx.com/calidad/defectos/dao/liberar_defecto.php', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({id})
-                        })
-                            .then(res => res.json()).then(data => {
-                            if (data.success) {
-                                Swal.fire('¡Liberado!', data.message, 'success');
-                                cargarDefectosDelDia();
-                            } else throw new Error(data.message);
-                        }).catch(err => Swal.fire('Error', err.message, 'error'));
-                    }
-                } else if (button.classList.contains('btn-edit')) {
-                    const parteActual = row.querySelector('[data-field="numeroParte"]').textContent;
-                    const estacionActual = row.querySelector('[data-field="estacion"]').textContent;
+                });
 
-                    const {value: formValues} = await Swal.fire({
-                        title: 'Editar Registro',
-                        html:
-                            `<input id="swal-parte" class="swal2-input" value="${parteActual}">` +
-                            `<input id="swal-estacion" class="swal2-input" value="${estacionActual}">`,
-                        focusConfirm: false,
-                        preConfirm: () => ({
-                            numeroParte: document.getElementById('swal-parte').value,
-                            estacion: document.getElementById('swal-estacion').value
-                        })
-                    });
-                    if (formValues) {
-                        fetch('https://grammermx.com/calidad/defectos/dao/actualizar_defecto.php', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({id, ...formValues})
-                        })
-                            .then(res => res.json()).then(data => {
-                            if (data.success) {
-                                Swal.fire('¡Actualizado!', data.message, 'success');
-                                cargarDefectosDelDia();
-                            } else throw new Error(data.message);
-                        }).catch(err => Swal.fire('Error', err.message, 'error'));
-                    }
+                if (formValues) {
+                    fetch('https://grammermx.com/calidad/defectos/dao/liberar_defecto.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({id, ...formValues})
+                    })
+                        .then(res => res.json()).then(data => {
+                        if (data.success) {
+                            Swal.fire('¡Actualizado!', data.message, 'success');
+                            cargarDefectosDelDia();
+                        } else throw new Error(data.message);
+                    }).catch(err => Swal.fire('Error', err.message, 'error'));
                 }
-            });
+            } else if (button.classList.contains('btn-edit')) {
+                const parteActual = row.querySelector('[data-field="numeroParte"]').textContent;
+                const estacionActual = row.querySelector('[data-field="estacion"]').textContent;
 
-            cargarDefectosDelDia();
-            nominaInput.focus();
+                const {value: formValues} = await Swal.fire({
+                    title: 'Editar Registro',
+                    html:
+                        `<input id="swal-parte" class="swal2-input" value="${parteActual}">` +
+                        `<input id="swal-estacion" class="swal2-input" value="${estacionActual}">`,
+                    focusConfirm: false,
+                    preConfirm: () => ({
+                        numeroParte: document.getElementById('swal-parte').value,
+                        estacion: document.getElementById('swal-estacion').value
+                    })
+                });
+                if (formValues) {
+                    fetch('https://grammermx.com/calidad/defectos/dao/actualizar_defecto.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({id, ...formValues})
+                    })
+                        .then(res => res.json()).then(data => {
+                        if (data.success) {
+                            Swal.fire('¡Actualizado!', data.message, 'success');
+                            cargarDefectosDelDia();
+                        } else throw new Error(data.message);
+                    }).catch(err => Swal.fire('Error', err.message, 'error'));
+                }
+            }
         });
+
+        cargarDefectosDelDia();
+        nominaInput.focus();
+    });
 </script>
 </body>
 </html>
