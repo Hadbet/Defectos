@@ -100,11 +100,11 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200/50">
                 <h2 class="text-xl font-bold text-slate-700 mb-4">Total de Defectos por Tipo</h2>
-                <canvas id="grafico-defectos-tipo"></canvas>
+                <canvas id="grafico-defectos-tipo" style="min-height: 300px;"></canvas>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200/50">
                 <h2 class="text-xl font-bold text-slate-700 mb-4">Defectos Reportados por Mes</h2>
-                <canvas id="grafico-defectos-mes"></canvas>
+                <canvas id="grafico-defectos-mes" style="min-height: 300px;"></canvas>
             </div>
         </div>
 
