@@ -67,7 +67,7 @@ try {
 
     // Insertar el nuevo defecto
     $stmt = $conex->prepare("INSERT INTO Defectos (Linea, Nomina, NumeroParte, Estacion, CodigoDefecto, Fecha, Estado) VALUES (?, ?, ?, ?, ?, ?, 0)");
-    $stmt->bind_param("ssssi", $input['linea'], $input['nomina'], $input['numeroParte'], $input['estacion'], $input['codigoDefecto'],$DateAndTime);
+    $stmt->bind_param("ssssis", $input['linea'], $input['nomina'], $input['numeroParte'], $input['estacion'], $input['codigoDefecto'],$DateAndTime);
     $stmt->execute();
 
     if ($stmt->affected_rows > 0) {
