@@ -18,7 +18,7 @@ $format = $Object->format("Y-m-d");
 try {
     $con = new LocalConector();
     $conex = $con->conectar();
-    $stmt = $conex->prepare("SELECT IdDefecto, TIME(Fecha) as Hora, Nomina, NumeroParte, Estacion, CodigoDefecto, Estado FROM Defectos WHERE DATE(Fecha) = ? AND Linea = ? ORDER BY Fecha DESC");
+    $stmt = $conex->prepare("SELECT IdDefecto, TIME(Fecha) as Hora, Nomina, NumeroParte, Estacion, CodigoDefecto, Estado FROM Defectos WHERE DATE(Fecha) = ? AND Linea = ? AND Estado = 0 ORDER BY Fecha DESC");
     $stmt->bind_param("ss",$format,$linea);
     $stmt->execute();
     $result = $stmt->get_result();
