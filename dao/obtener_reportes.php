@@ -63,7 +63,7 @@ try {
 
     // --- 3. Consulta para la Tabla de Registros ---
     $sql_tabla = "SELECT d.IdDefecto, d.Nomina, d.NumeroParte, d.Estacion, d.CodigoDefecto, 
-                         cd.Descripcion as DescripcionDefecto, DATE_FORMAT(d.Fecha, '%Y-%m-%d %H:%i') as Fecha, d.Status, d.Linea, d.Comentarios
+                         cd.Descripcion as DescripcionDefecto, DATE_FORMAT(d.Fecha, '%Y-%m-%d %H:%i') as Fecha, d.Estado, d.Linea, d.Comentarios
                   FROM Defectos d
                   JOIN Catalogo_Defectos cd ON d.CodigoDefecto = cd.IdDefecto
                   WHERE $where_sql
