@@ -61,12 +61,13 @@ try {
     $Object = new DateTime();
     $Object->setTimezone(new DateTimeZone('America/Denver')); // Considera usar 'America/Mexico_City' si aplica
     $DateAndTime = $Object->format("Y-m-d H:i:s");
+    $format = $Object->format("Y-m-d");
 
     $conex->begin_transaction();
 
     // Insertar el nuevo defecto
-    $stmt = $conex->prepare("INSERT INTO Defectos (Nomina, NumeroParte, Estacion, CodigoDefecto, Fecha) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssis", $input['nomina'], $input['numeroParte'], $input['estacion'], $input['codigoDefecto'],$DateAndTime);
+    $stmt = $conex->prepare("INSERT INTO Defectos (Linea, Nomina, NumeroParte, Estacion, CodigoDefecto, Fecha, Status) VALUES (?, ?, ?, ?, ?, ?, 0)");
+    $stmt->bind_param("ssssi", $input['linea'], $input['nomina'], $input['numeroParte'], $input['estacion'], $input['codigoDefecto'],$DateAndTime);
     $stmt->execute();
 
     if ($stmt->affected_rows > 0) {
@@ -77,8 +78,8 @@ try {
         $codigoDefecto = $input['codigoDefecto'];
 
         // Contar cuántas veces se ha repetido el mismo defecto hoy
-        $countStmt = $conex->prepare("SELECT COUNT(IdDefecto) as count FROM Defectos WHERE CodigoDefecto = ? AND DATE(Fecha) = CURDATE()");
-        $countStmt->bind_param("i", $codigoDefecto);
+        $countStmt = $conex->prepare("SELECT COUNT(IdDefecto) as count FROM Defectos WHERE CodigoDefecto = ? AND DATE(Fecha) = ?");
+        $countStmt->bind_param("is", $codigoDefecto,$format);
         $countStmt->execute();
         $result = $countStmt->get_result();
         $countRow = $result->fetch_assoc();
