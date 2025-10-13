@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-include_once('../db/db_calidad.php');
+include_once('db/db_calidad.php');
 
 $linea = isset($_GET['linea']) ? $_GET['linea'] : '';
 if (empty($linea)) {
