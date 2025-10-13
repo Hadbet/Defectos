@@ -26,6 +26,21 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Estilos para la tabla animada y mejorada */
+        #tabla-body tr {
+            opacity: 0;
+            animation: tableRowIn 0.5s ease-out forwards;
+        }
+        @keyframes tableRowIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -97,7 +112,7 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
         <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200/50">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-slate-700">Registros Detallados</h2>
-                <button id="btn-exportar" class="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors">
+                <button id="btn-exportar" class="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50" disabled>
                     Exportar a Excel
                 </button>
             </div>
@@ -105,15 +120,15 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
                 <table id="tabla-registros" class="w-full text-left">
                     <thead class="bg-slate-50">
                     <tr>
-                        <th class="p-3 text-sm font-semibold text-slate-600">ID</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Fecha</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Línea</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Nómina</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">No. Parte</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Estación</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Defecto</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Estado</th>
-                        <th class="p-3 text-sm font-semibold text-slate-600">Comentarios</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">ID</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Fecha</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Línea</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Nómina</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">No. Parte</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Estación</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Defecto</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Estado</th>
+                        <th class="p-3 text-sm font-semibold text-slate-600 uppercase tracking-wider">Comentarios</th>
                     </tr>
                     </thead>
                     <tbody id="tabla-body">
@@ -127,23 +142,20 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Inicialización de gráficos (vacíos al principio)
         let graficoTipo, graficoMes;
 
-        // --- CONFIGURACIÓN INICIAL ---
         const fechaFinInput = document.getElementById('fecha-fin');
         const fechaInicioInput = document.getElementById('fecha-inicio');
+        const btnExportar = document.getElementById('btn-exportar');
 
-        // Poner fechas por defecto (hoy y primer día del mes)
         const hoy = new Date();
         const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
         fechaFinInput.value = hoy.toISOString().split('T')[0];
         fechaInicioInput.value = primerDiaMes.toISOString().split('T')[0];
 
-        // --- FUNCIONES DE GRÁFICOS Y TABLA ---
         const renderizarGraficoTipo = (data) => {
             const ctx = document.getElementById('grafico-defectos-tipo').getContext('2d');
-            if (graficoTipo) graficoTipo.destroy(); // Destruir gráfico anterior
+            if (graficoTipo) graficoTipo.destroy();
             graficoTipo = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -185,29 +197,33 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
             const tablaBody = document.getElementById('tabla-body');
             const estados = { 0: 'Pendiente', 1: 'Retrabajo', 2: 'Scrap', 3: 'Liberado' };
             tablaBody.innerHTML = '';
+
             if (data.length === 0) {
                 tablaBody.innerHTML = `<tr><td colspan="9" class="text-center p-6 text-slate-500">No se encontraron registros con los filtros seleccionados.</td></tr>`;
+                btnExportar.disabled = true;
                 return;
             }
-            data.forEach(row => {
+
+            btnExportar.disabled = false;
+            data.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                tr.className = 'border-b border-slate-200 hover:bg-slate-50';
+                tr.className = 'border-b border-slate-200/80 even:bg-slate-50/50 hover:bg-blue-50/80';
+                tr.style.animationDelay = `${index * 0.03}s`; // Animación escalonada
                 tr.innerHTML = `
-                <td class="p-3">${row.IdDefecto}</td>
-                <td class="p-3">${row.Fecha}</td>
-                <td class="p-3">${row.Linea}</td>
-                <td class="p-3">${row.Nomina}</td>
-                <td class="p-3">${row.NumeroParte}</td>
-                <td class="p-3">${row.Estacion}</td>
-                <td class="p-3">${row.CodigoDefecto} - ${row.DescripcionDefecto}</td>
-                <td class="p-3">${estados[row.Status] || 'N/A'}</td>
-                <td class="p-3">${row.Comentarios || ''}</td>
-            `;
+                    <td class="p-3 text-sm">${row.IdDefecto}</td>
+                    <td class="p-3 text-sm">${row.Fecha}</td>
+                    <td class="p-3 text-sm">${row.Linea}</td>
+                    <td class="p-3 text-sm">${row.Nomina}</td>
+                    <td class="p-3 text-sm">${row.NumeroParte}</td>
+                    <td class="p-3 text-sm">${row.Estacion}</td>
+                    <td class="p-3 text-sm">${row.CodigoDefecto} - ${row.DescripcionDefecto}</td>
+                    <td class="p-3 text-sm">${estados[row.Status] || 'N/A'}</td>
+                    <td class="p-3 text-sm">${row.Comentarios || ''}</td>
+                `;
                 tablaBody.appendChild(tr);
             });
         };
 
-        // --- FUNCIÓN PRINCIPAL PARA OBTENER DATOS ---
         const consultarDatos = async () => {
             const fechaInicio = fechaInicioInput.value;
             const fechaFin = fechaFinInput.value;
@@ -218,7 +234,6 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
                 return;
             }
 
-            // Mostrar carga
             const btn = document.getElementById('btn-consultar');
             btn.disabled = true;
             btn.innerHTML = 'Consultando...';
@@ -229,7 +244,6 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
 
                 if (!result.success) throw new Error(result.message);
 
-                // Renderizar todo con los nuevos datos
                 renderizarGraficoTipo(result.data.defectosPorTipo);
                 renderizarGraficoMes(result.data.defectosPorMes);
                 poblarTabla(result.data.tablaRegistros);
@@ -242,7 +256,6 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
             }
         };
 
-        // --- EVENT LISTENERS ---
         document.getElementById('btn-consultar').addEventListener('click', consultarDatos);
 
         document.getElementById('btn-exportar').addEventListener('click', () => {
@@ -251,9 +264,9 @@ $lineas_disponibles = ["XNF", "BR167HR", "L234", "BMW G0S", "INSITU"];
             XLSX.writeFile(wb, "Reporte_Defectos.xlsx");
         });
 
-        // Carga inicial de datos al entrar a la página
         consultarDatos();
     });
 </script>
 </body>
 </html>
+
