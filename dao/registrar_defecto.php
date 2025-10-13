@@ -66,7 +66,7 @@ try {
     $conex->begin_transaction();
 
     // Insertar el nuevo defecto
-    $stmt = $conex->prepare("INSERT INTO Defectos (Linea, Nomina, NumeroParte, Estacion, CodigoDefecto, Fecha, Status) VALUES (?, ?, ?, ?, ?, ?, 0)");
+    $stmt = $conex->prepare("INSERT INTO Defectos (Linea, Nomina, NumeroParte, Estacion, CodigoDefecto, Fecha, Estado) VALUES (?, ?, ?, ?, ?, ?, 0)");
     $stmt->bind_param("ssssi", $input['linea'], $input['nomina'], $input['numeroParte'], $input['estacion'], $input['codigoDefecto'],$DateAndTime);
     $stmt->execute();
 
@@ -161,7 +161,7 @@ try {
 
                 $mail->send();
 
-                enviarNotificacionTelegram($codigoDefecto, $input['numeroParte'], $input['estacion'], $countRow['count']);
+                //enviarNotificacionTelegram($codigoDefecto, $input['numeroParte'], $input['estacion'], $countRow['count']);
 
             } catch (Exception $e) {
                 // Si el correo falla, no detenemos el proceso, pero podemos registrar el error si es necesario.
