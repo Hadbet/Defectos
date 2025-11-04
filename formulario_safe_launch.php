@@ -133,13 +133,19 @@ try {
                     </div>
 
                     <div>
-                        <label for="estacion" class="block text-sm font-medium text-slate-600">3. Estación /
+                        <label for="serial" class="block text-sm font-medium text-slate-600">3. Serial</label>
+                        <input type="text" id="serial" name="serial" required
+                               class="mt-1 block w-full bg-slate-50 border border-slate-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="estacion" class="block text-sm font-medium text-slate-600">4. Estación /
                             Operación</label>
                         <input type="text" id="estacion" name="estacion" required
                                class="mt-1 block w-full bg-slate-50 border border-slate-300 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label for="codigo-defecto" class="block text-sm font-medium text-slate-600">4. Código de
+                        <label for="codigo-defecto" class="block text-sm font-medium text-slate-600">5. Código de
                             Defecto</label>
                         <select id="codigo-defecto" name="codigo-defecto" required>
                             <option value="">Selecciona o busca un código...</option>
