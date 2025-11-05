@@ -28,7 +28,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Defectos - <?php echo $linea_seleccionada; ?></title>
+    <title>Registro de Safe Launch - <?php echo $linea_seleccionada; ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
@@ -109,7 +109,7 @@ try {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Formulario y Tabla de Defectos (código HTML sin cambios) -->
         <div class="text-center mb-12 fade-in">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800">Registro de Defectos de Producción</h1>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800">Registro de Safe Launch de Producción</h1>
             <p class="mt-3 max-w-2xl mx-auto text-lg text-slate-500">Introduce los datos para registrar un nuevo defecto
                 en la línea <span class="font-bold text-blue-600"><?php echo $linea_seleccionada; ?></span>.</p>
         </div>
@@ -201,7 +201,7 @@ try {
 
         const cargarDefectosDelDia = async () => {
             try {
-                const response = await fetch(`https://grammermx.com/calidad/defectos/dao/obtener_defectos_dia.php?linea=${encodeURIComponent(linea)}`);
+                const response = await fetch(`https://grammermx.com/calidad/defectos/dao/obtener_safe_launch_dia.php?linea=${encodeURIComponent(linea)}`);
                 const result = await response.json();
                 if (result.success) {
                     tablaBody.innerHTML = '';
@@ -218,7 +218,7 @@ try {
                             }[defecto.Status] || '';
 
                             row.className = `border-b border-slate-200/80 hover:bg-slate-50/80 ${statusClass}`;
-                            row.dataset.id = defecto.IdDefecto;
+                            row.dataset.id = defecto.IdSafeLaunch;
                             row.innerHTML = `
                             <td class="p-4 text-slate-500">${defecto.Hora}</td>
                             <td class="p-4 font-medium">${defecto.Nomina}</td>
@@ -252,7 +252,7 @@ try {
                 codigoDefecto: tomSelect.getValue()
             };
             try {
-                const response = await fetch('https://grammermx.com/calidad/defectos/dao/registrar_defecto.php', {
+                const response = await fetch('https://grammermx.com/calidad/defectos/dao/registrar_safe_launch.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(datos)
@@ -295,7 +295,7 @@ try {
                     confirmButtonText: 'Sí, ¡eliminar!'
                 });
                 if (result.isConfirmed) {
-                    fetch('https://grammermx.com/calidad/defectos/dao/eliminar_defecto.php', {
+                    fetch('https://grammermx.com/calidad/defectos/dao/eliminar_safe_launch.php', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({id})
@@ -338,7 +338,7 @@ try {
                 });
 
                 if (formValues) {
-                    fetch('https://grammermx.com/calidad/defectos/dao/liberar_defecto.php', {
+                    fetch('https://grammermx.com/calidad/defectos/dao/liberar_defecto_safe_launch.php', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({id, ...formValues})
@@ -366,7 +366,7 @@ try {
                     })
                 });
                 if (formValues) {
-                    fetch('https://grammermx.com/calidad/defectos/dao/actualizar_defecto.php', {
+                    fetch('https://grammermx.com/calidad/defectos/dao/actualizar_safe_launch.php', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({id, ...formValues})
