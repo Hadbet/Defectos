@@ -157,7 +157,7 @@
         submenus.forEach(sublinea => {
             const link = document.createElement('a');
             // Creamos el URL, ej: ...formulario_defectos.php?linea=XNF&sublinea=SPORT
-            link.href = `${baseUrl}?linea=${encodeURIComponent(linea)}&sublinea=${encodeURIComponent(sublinea)}`;
+            link.href = `${baseUrl}?linea=${encodeURIComponent(linea)} ${encodeURIComponent(sublinea)}`;
             link.className = 'block w-full p-4 text-left text-lg font-medium text-slate-700 bg-slate-50 rounded-lg border border-slate-200 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-700 transition duration-150 ease-in-out';
             link.textContent = sublinea;
             modalList.appendChild(link);
