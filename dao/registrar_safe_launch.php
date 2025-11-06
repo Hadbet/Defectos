@@ -13,6 +13,7 @@ header('Content-Type: application/json');
 include_once('db/db_calidad.php');
 
 // ... (La función enviarNotificacionTelegram permanece igual) ...
+/*
 function enviarNotificacionTelegram($codigoDefecto, $numeroParte, $estacion, $totalReportes)
 {
       // --- CONFIGURACIÓN DE TU BOT ---
@@ -32,7 +33,7 @@ function enviarNotificacionTelegram($codigoDefecto, $numeroParte, $estacion, $to
   $mensajeCodificado = urlencode($mensaje);
   $url = "https://api.telegram.org/bot{$botToken}/sendMessage?chat_id={$chatId}&text={$mensajeCodificado}&parse_mode=Markdown";
   @file_get_contents($url);
-}
+}*/
 
 
 $response = ['success' => false, 'message' => ''];
@@ -67,7 +68,6 @@ try {
     } elseif ($codigoDefecto == '3') { // Scrapt
         $estado = 3;
     }
-    // Para cualquier otro código, $estado permanece en 0
 
     $conex->begin_transaction();
 

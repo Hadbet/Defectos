@@ -126,7 +126,8 @@ try {
                 <a href="index.php" class="flex-shrink-0 font-bold text-xl text-blue-600">GRAMMER</a>
                 <div class="ml-10 flex items-baseline space-x-4">
                     <a href="index.php" class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Inicio</a>
-                    <a href="reportes_safe_launch.php" class="text-slate-500 hover:bg-blue-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Reportes</a>
+                    <!-- Corregido el enlace a reportes -->
+                    <a href="reportes.php" class="text-slate-500 hover:bg-blue-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Reportes</a>
                 </div>
             </div>
         </div>
@@ -181,8 +182,15 @@ try {
                         </div>
                     </div>
                     <div class="mt-8">
-                        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700">
-                            Registrar Defecto
+                        <!-- --- BOTÓN MODIFICADO --- -->
+                        <button type="submit" id="submit-button" class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">
+                            <!-- Spinner (oculto por defecto) -->
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" id="button-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <!-- Texto del botón -->
+                            <span id="button-text">Registrar Defecto</span>
                         </button>
                     </div>
                 </form>
@@ -217,7 +225,7 @@ try {
         <div class="mt-16 fade-in" style="animation-delay: 0.4s;">
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-slate-700 text-center sm:text-left">
-                    Registros Pendientes de Hoy (Línea: <?php echo $linea_completa; ?>)
+                    Registros de Hoy (Línea: <?php echo $linea_completa; ?>)
                 </h2>
                 <button id="btn-resumen-dia" class="mt-4 sm:mt-0 w-full sm:w-auto px-5 py-2 bg-blue-600 text-white font-medium rounded-md shadow-sm hover:bg-blue-700">
                     Ver Resumen del Día
@@ -254,6 +262,11 @@ try {
         const tablaBody = document.getElementById('tabla-defectos-body');
         const linea = document.getElementById('linea').value;
 
+        // --- NUEVAS REFERENCIAS PARA EL BOTÓN Y SPINNER ---
+        const submitButton = document.getElementById('submit-button');
+        const buttonSpinner = document.getElementById('button-spinner');
+        const buttonText = document.getElementById('button-text');
+
         // Contadores
         const countOkEl = document.getElementById('count-ok');
         const countScrapEl = document.getElementById('count-scrap');
@@ -267,6 +280,19 @@ try {
             create: false,
             sortField: { field: "text", direction: "asc" }
         });
+
+        // --- NUEVAS FUNCIONES PARA CONTROLAR EL SPINNER ---
+        const showSpinner = () => {
+            submitButton.disabled = true;
+            buttonSpinner.classList.remove('hidden');
+            buttonText.textContent = 'Registrando...';
+        };
+
+        const hideSpinner = () => {
+            submitButton.disabled = false;
+            buttonSpinner.classList.add('hidden');
+            buttonText.textContent = 'Registrar Defecto';
+        };
 
         // Helper para mapear estado
         const getEstadoInfo = (status) => {
@@ -282,42 +308,31 @@ try {
 
         const cargarDefectosDelDia = async () => {
             try {
+                // (El resto de la función es igual)
                 const response = await fetch(`https://grammermx.com/calidad/defectos/dao/obtener_safe_launch_dia.php?linea=${encodeURIComponent(linea)}`);
                 const result = await response.json();
 
                 if (result.success) {
                     tablaBody.innerHTML = '';
-
-                    // Variables para contadores
-                    let countOk = 0;
-                    let countScrap = 0;
-                    let countDefecto = 0;
-                    let countRetrabajo = 0;
+                    let countOk = 0, countScrap = 0, countDefecto = 0, countRetrabajo = 0;
 
                     if (result.data.length === 0) {
                         tablaBody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-500">No hay registros hoy para esta línea.</td></tr>`;
                     } else {
                         result.data.forEach(defecto => {
-                            // Conteo para los contadores
                             switch (parseInt(defecto.Estado, 10)) {
                                 case 0: countDefecto++; break;
                                 case 1: countRetrabajo++; break;
                                 case 2: countOk++; break;
                                 case 3: countScrap++; break;
                             }
-
                             const row = document.createElement('tr');
                             const estadoInfo = getEstadoInfo(defecto.Estado);
-
-                            // Asignar clase de color de fondo a la fila
                             row.className = `border-b border-slate-200/80 hover:bg-slate-50/80 table-row-status-${defecto.Estado}`;
-                            row.dataset.id = defecto.IdSafeLaunch; // Guardamos el ID en la fila
-
-                            // Ocultar botón "Liberar" si el estado es 2 (OK)
+                            row.dataset.id = defecto.IdSafeLaunch;
                             const liberarButtonHtml = parseInt(defecto.Estado, 10) !== 2 ?
                                 `<button class="p-2 text-green-500 hover:text-green-700 btn-liberar" title="Liberar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></button>` :
                                 '';
-
                             row.innerHTML = `
                             <td class="p-4 text-slate-500">${defecto.Hora}</td>
                             <td class="p-4 font-medium">${defecto.Nomina}</td>
@@ -336,21 +351,23 @@ try {
                             tablaBody.appendChild(row);
                         });
                     }
-
-                    // Actualizar contadores
                     countOkEl.textContent = countOk;
                     countScrapEl.textContent = countScrap;
                     countDefectoEl.textContent = countDefecto;
                     countRetrabajoEl.textContent = countRetrabajo;
-
                 }
             } catch (error) {
                 tablaBody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-red-500">Error: ${error.message}</td></tr>`;
             }
         };
 
+        // --- LISTENER DEL FORMULARIO MODIFICADO ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            // 1. Mostrar Spinner
+            showSpinner();
+
             const datos = {
                 linea: linea,
                 nomina: document.getElementById('nomina').value,
@@ -359,6 +376,7 @@ try {
                 serial: document.getElementById('serial').value,
                 codigoDefecto: tomSelect.getValue()
             };
+
             try {
                 const response = await fetch('https://grammermx.com/calidad/defectos/dao/registrar_safe_launch.php', {
                     method: 'POST',
@@ -383,17 +401,20 @@ try {
                 }
             } catch (error) {
                 Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+            } finally {
+                // 2. Ocultar Spinner (en try...finally para que se oculte SIEMPRE)
+                hideSpinner();
             }
         });
 
-        // --- MANEJO DE ACCIONES DE LA TABLA (Editar, Liberar, Eliminar) ---
+        // --- MANEJO DE ACCIONES DE LA TABLA (Sin cambios) ---
         tablaBody.addEventListener('click', async (e) => {
             const button = e.target.closest('button');
             if (!button) return;
-
             const row = button.closest('tr');
             const id = row.dataset.id;
 
+            // ... (Lógica de btn-eliminar)
             if (button.classList.contains('btn-eliminar')) {
                 const result = await Swal.fire({
                     title: '¿Estás seguro?',
@@ -416,7 +437,9 @@ try {
                         } else throw new Error(data.message);
                     }).catch(err => Swal.fire('Error', err.message, 'error'));
                 }
-            } else if (button.classList.contains('btn-liberar')) {
+            }
+            // ... (Lógica de btn-liberar)
+            else if (button.classList.contains('btn-liberar')) {
                 const { value: formValues } = await Swal.fire({
                     title: 'Disposición del Defecto',
                     html: `
@@ -460,12 +483,12 @@ try {
                         } else throw new Error(data.message);
                     }).catch(err => Swal.fire('Error', err.message, 'error'));
                 }
-            } else if (button.classList.contains('btn-edit')) {
-                // Obtener datos actuales de la fila
+            }
+            // ... (Lógica de btn-edit)
+            else if (button.classList.contains('btn-edit')) {
                 const parteActual = row.querySelector('[data-field="numeroParte"]').textContent;
                 const serialActual = row.querySelector('[data-field="serial"]').textContent;
                 const estacionActual = row.querySelector('[data-field="estacion"]').textContent;
-                // Necesitamos el estado actual (0, 1, 2, 3) para pre-seleccionarlo
                 const estadoActual = Array.from(row.classList).find(c => c.startsWith('table-row-status-')).split('-')[3];
 
                 const { value: formValues } = await Swal.fire({
@@ -491,7 +514,7 @@ try {
                         numeroParte: document.getElementById('swal-parte').value,
                         serial: document.getElementById('swal-serial').value,
                         estacion: document.getElementById('swal-estacion').value,
-                        estado: document.getElementById('swal-estado-edit').value // Nuevo campo
+                        estado: document.getElementById('swal-estado-edit').value
                     })
                 });
 
@@ -499,7 +522,7 @@ try {
                     fetch('https://grammermx.com/calidad/defectos/dao/actualizar_safe_launch.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id, ...formValues }) // Enviamos todos los valores
+                        body: JSON.stringify({ id, ...formValues })
                     })
                         .then(res => res.json()).then(data => {
                         if (data.success) {
@@ -511,17 +534,15 @@ try {
             }
         });
 
-        // --- NUEVO: Bitácora de Cambios (Doble Clic) ---
+        // --- Bitácora de Cambios (Doble Clic) (Sin cambios) ---
         tablaBody.addEventListener('dblclick', async (e) => {
             const row = e.target.closest('tr');
             if (!row || !row.dataset.id) return;
-
             const id = row.dataset.id;
 
             try {
                 const response = await fetch(`https://grammermx.com/calidad/defectos/dao/obtener_bitacora.php?id=${id}`);
                 const result = await response.json();
-
                 if (!result.success) throw new Error(result.message);
 
                 let tableHtml = '<table class="swal2-table w-full text-left border-collapse">';
@@ -558,12 +579,11 @@ try {
             }
         });
 
-        // --- NUEVO: Resumen del Día ---
+        // --- Resumen del Día (Sin cambios) ---
         btnResumenDia.addEventListener('click', async () => {
             try {
                 const response = await fetch(`https://grammermx.com/calidad/defectos/dao/obtener_resumen_dia.php?linea=${encodeURIComponent(linea)}`);
                 const result = await response.json();
-
                 if (!result.success) throw new Error(result.message);
 
                 let tableHtml = `<div class="max-h-96 overflow-y-auto">
@@ -608,10 +628,8 @@ try {
                     denyButtonText: 'Descargar Imagen'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Descargar Excel
                         exportTableToExcel('tabla-resumen', `Resumen_${linea}_${new Date().toISOString().split('T')[0]}.xlsx`);
                     } else if (result.isDenied) {
-                        // Descargar Imagen
                         exportModalToImage('tabla-resumen', `Resumen_${linea}_${new Date().toISOString().split('T')[0]}.png`);
                     }
                 });
@@ -621,7 +639,7 @@ try {
             }
         });
 
-        // --- Funciones de Exportación ---
+        // --- Funciones de Exportación (Sin cambios) ---
         function exportTableToExcel(tableId, filename = '') {
             const table = document.getElementById(tableId);
             const wb = XLSX.utils.table_to_book(table, { sheet: "Resumen" });
@@ -634,7 +652,6 @@ try {
                 Swal.fire('Error', 'No se encontró la tabla para capturar', 'error');
                 return;
             }
-
             Swal.fire({
                 title: 'Generando imagen...',
                 text: 'Por favor espera.',
@@ -643,9 +660,8 @@ try {
                     Swal.showLoading();
                 }
             });
-
             html2canvas(element, {
-                scale: 2, // Mejorar resolución
+                scale: 2,
                 backgroundColor: '#ffffff'
             }).then(canvas => {
                 canvas.toBlob(function(blob) {
@@ -664,3 +680,4 @@ try {
 </script>
 </body>
 </html>
+
