@@ -93,8 +93,8 @@ try {
 
         // --- Lógica de Notificación (sin cambios) ---
         // Contar cuántas veces se ha repetido el mismo defecto hoy
-        $countStmt = $conex->prepare("SELECT COUNT(IdSafeLaunch) as count FROM Safe_Launch WHERE CodigoDefecto = ? AND DATE(Fecha) = ?");
-        $countStmt->bind_param("is", $codigoDefecto, $format);
+        $countStmt = $conex->prepare("SELECT COUNT(IdSafeLaunch) as count FROM Safe_Launch WHERE CodigoDefecto = ? AND DATE(Fecha) = ? AND Linea = ?");
+        $countStmt->bind_param("iss", $codigoDefecto, $format,$input['linea']);
         $countStmt->execute();
         $result = $countStmt->get_result();
         $countRow = $result->fetch_assoc();
