@@ -262,12 +262,7 @@ try {
         const tablaBody = document.getElementById('tabla-defectos-body');
         const linea = document.getElementById('linea').value;
 
-        // --- INICIO DE LA MODIFICACIÓN: Referencias a los campos ---
-        const numeroParteInput = document.getElementById('numero-parte');
-        const serialInput = document.getElementById('serial');
-        const estacionInput = document.getElementById('estacion');
-        // --- FIN DE LA MODIFICACIÓN ---
-
+        // --- NUEVAS REFERENCIAS PARA EL BOTÓN Y SPINNER ---
         const submitButton = document.getElementById('submit-button');
         const buttonSpinner = document.getElementById('button-spinner');
         const buttonText = document.getElementById('button-text');
@@ -286,6 +281,7 @@ try {
             sortField: { field: "text", direction: "asc" }
         });
 
+        // --- NUEVAS FUNCIONES PARA CONTROLAR EL SPINNER ---
         const showSpinner = () => {
             submitButton.disabled = true;
             buttonSpinner.classList.remove('hidden');
@@ -298,6 +294,7 @@ try {
             buttonText.textContent = 'Registrar Defecto';
         };
 
+        // Helper para mapear estado
         const getEstadoInfo = (status) => {
             const numStatus = parseInt(status, 10);
             switch (numStatus) {
@@ -309,44 +306,9 @@ try {
             }
         };
 
-        // --- INICIO DE LA MODIFICACIÓN: Lógica de Parseo Automático ---
-        const parseScannedData = (scannedValue) => {
-            // Longitudes basadas en tu ejemplo: "112199921006" (12) y "0003061" (7)
-            const partNumberLength = 12;
-            const serialNumberLength = 7;
-            const totalLength = partNumberLength + serialNumberLength; // 19
-
-            // Si el valor escaneado es lo suficientemente largo
-            if (scannedValue.length >= totalLength) {
-                // 1. Extraer los datos
-                const numeroParte = scannedValue.substring(0, partNumberLength);
-                const serial = scannedValue.substring(partNumberLength, totalLength);
-
-                // 2. Auto-rellenar los campos
-                // Usamos setTimeout para darle tiempo al DOM de actualizarse
-                setTimeout(() => {
-                    numeroParteInput.value = numeroParte;
-                    serialInput.value = serial;
-
-                    // 3. Mover el foco al siguiente campo (Estación)
-                    estacionInput.focus();
-                }, 0);
-            }
-        };
-
-        // Asignar el listener a AMBOS campos (No. Parte y Serial)
-        numeroParteInput.addEventListener('input', (e) => {
-            parseScannedData(e.target.value);
-        });
-
-        serialInput.addEventListener('input', (e) => {
-            parseScannedData(e.target.value);
-        });
-        // --- FIN DE LA MODIFICACIÓN ---
-
-
         const cargarDefectosDelDia = async () => {
             try {
+                // (El resto de la función es igual)
                 const response = await fetch(`https://grammermx.com/calidad/defectos/dao/obtener_safe_launch_dia.php?linea=${encodeURIComponent(linea)}`);
                 const result = await response.json();
 
@@ -399,9 +361,13 @@ try {
             }
         };
 
+        // --- LISTENER DEL FORMULARIO MODIFICADO ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            // 1. Mostrar Spinner
             showSpinner();
+
             const datos = {
                 linea: linea,
                 nomina: document.getElementById('nomina').value,
@@ -410,6 +376,7 @@ try {
                 serial: document.getElementById('serial').value,
                 codigoDefecto: tomSelect.getValue()
             };
+
             try {
                 const response = await fetch('https://grammermx.com/calidad/defectos/dao/registrar_safe_launch.php', {
                     method: 'POST',
@@ -428,23 +395,26 @@ try {
                     form.reset();
                     tomSelect.clear();
                     nominaInput.focus();
-                    await cargarDefectosDelDia();
+                    await cargarDefectosDelDia(); // Recargar tabla y contadores
                 } else {
                     throw new Error(result.message);
                 }
             } catch (error) {
                 Swal.fire({ icon: 'error', title: 'Error', text: error.message });
             } finally {
+                // 2. Ocultar Spinner (en try...finally para que se oculte SIEMPRE)
                 hideSpinner();
             }
         });
 
+        // --- MANEJO DE ACCIONES DE LA TABLA (Sin cambios) ---
         tablaBody.addEventListener('click', async (e) => {
             const button = e.target.closest('button');
             if (!button) return;
             const row = button.closest('tr');
             const id = row.dataset.id;
 
+            // ... (Lógica de btn-eliminar)
             if (button.classList.contains('btn-eliminar')) {
                 const result = await Swal.fire({
                     title: '¿Estás seguro?',
@@ -463,11 +433,12 @@ try {
                         .then(res => res.json()).then(data => {
                         if (data.success) {
                             Swal.fire('¡Eliminado!', data.message, 'success');
-                            cargarDefectosDelDia();
+                            cargarDefectosDelDia(); // Recargar tabla y contadores
                         } else throw new Error(data.message);
                     }).catch(err => Swal.fire('Error', err.message, 'error'));
                 }
             }
+            // ... (Lógica de btn-liberar)
             else if (button.classList.contains('btn-liberar')) {
                 const { value: formValues } = await Swal.fire({
                     title: 'Disposición del Defecto',
@@ -508,11 +479,12 @@ try {
                         .then(res => res.json()).then(data => {
                         if (data.success) {
                             Swal.fire('¡Actualizado!', data.message, 'success');
-                            cargarDefectosDelDia();
+                            cargarDefectosDelDia(); // Recargar tabla y contadores
                         } else throw new Error(data.message);
                     }).catch(err => Swal.fire('Error', err.message, 'error'));
                 }
             }
+            // ... (Lógica de btn-edit)
             else if (button.classList.contains('btn-edit')) {
                 const parteActual = row.querySelector('[data-field="numeroParte"]').textContent;
                 const serialActual = row.querySelector('[data-field="serial"]').textContent;
@@ -555,13 +527,14 @@ try {
                         .then(res => res.json()).then(data => {
                         if (data.success) {
                             Swal.fire('¡Actualizado!', data.message, 'success');
-                            cargarDefectosDelDia();
+                            cargarDefectosDelDia(); // Recargar tabla y contadores
                         } else throw new Error(data.message);
                     }).catch(err => Swal.fire('Error', err.message, 'error'));
                 }
             }
         });
 
+        // --- Bitácora de Cambios (Doble Clic) (Sin cambios) ---
         tablaBody.addEventListener('dblclick', async (e) => {
             const row = e.target.closest('tr');
             if (!row || !row.dataset.id) return;
@@ -574,11 +547,11 @@ try {
 
                 let tableHtml = '<table class="swal2-table w-full text-left border-collapse">';
                 tableHtml += `<thead><tr class="bg-slate-100">
-                                <th class="p-2 border">Fecha</th>
-                                <th class="p-2 border">Acción</th>
-                                <th class="p-2 border">Campo Modificado</th>
-                                <th class="p-2 border">Valor Anterior</th>
-                                </tr></thead><tbody>`;
+                            <th class="p-2 border">Fecha</th>
+                            <th class="p-2 border">Acción</th>
+                            <th class="p-2 border">Campo Modificado</th>
+                            <th class="p-2 border">Valor Anterior</th>
+                          </tr></thead><tbody>`;
 
                 if (result.data.length === 0) {
                     tableHtml += '<tr><td colspan="4" class="text-center p-4">No hay historial de cambios para este registro.</td></tr>';
@@ -589,7 +562,7 @@ try {
                                     <td class="p-2 border">${log.Accion}</td>
                                     <td class="p-2 border">${log.CampoModificado || 'N/A'}</td>
                                     <td class="p-2 border">${log.ValorAnterior || 'N/A'}</td>
-                                    </tr>`;
+                                  </tr>`;
                     });
                 }
                 tableHtml += '</tbody></table>';
@@ -606,6 +579,7 @@ try {
             }
         });
 
+        // --- Resumen del Día (Sin cambios) ---
         btnResumenDia.addEventListener('click', async () => {
             try {
                 const response = await fetch(`https://grammermx.com/calidad/defectos/dao/obtener_resumen_dia.php?linea=${encodeURIComponent(linea)}`);
@@ -613,32 +587,32 @@ try {
                 if (!result.success) throw new Error(result.message);
 
                 let tableHtml = `<div class="max-h-96 overflow-y-auto">
-                                <table id="tabla-resumen" class="w-full text-left border-collapse">
-                                <thead class="sticky top-0 bg-white shadow-sm">
-                                <tr class="bg-slate-100">
-                                 <th class="p-3 border">No. Parte</th>
-                                 <th class="p-3 border">Estación</th>
-                                 <th class="p-3 border">Serial</th>
-                                 <th class="p-3 border text-center text-green-600">OK</th>
-                                 <th class="p-3 border text-center text-yellow-600">Retrabajo</th>
-                                 <th class="p-3 border text-center text-red-600">Scrap</th>
-                                 <th class="p-3 border text-center text-orange-600">Pendiente</th>
-                                </tr>
-                                </thead><tbody>`;
+                             <table id="tabla-resumen" class="w-full text-left border-collapse">
+                             <thead class="sticky top-0 bg-white shadow-sm">
+                               <tr class="bg-slate-100">
+                                <th class="p-3 border">No. Parte</th>
+                                <th class="p-3 border">Estación</th>
+                                <th class="p-3 border">Serial</th>
+                                <th class="p-3 border text-center text-green-600">OK</th>
+                                <th class="p-3 border text-center text-yellow-600">Retrabajo</th>
+                                <th class="p-3 border text-center text-red-600">Scrap</th>
+                                <th class="p-3 border text-center text-orange-600">Pendiente</th>
+                               </tr>
+                             </thead><tbody>`;
 
                 if (result.data.length === 0) {
                     tableHtml += '<tr><td colspan="7" class="text-center p-4">No hay datos para resumir hoy.</td></tr>';
                 } else {
                     result.data.forEach(row => {
                         tableHtml += `<tr class="border-b">
-                                     <td class="p-2 border">${row.NumeroParte}</td>
-                                     <td class="p-2 border">${row.Estacion}</td>
-                                     <td class="p-2 border">${row.Serial}</td>
-                                     <td class="p-2 border text-center font-bold">${row.Cantidad_OK}</td>
-                                     <td class="p-2 border text-center font-bold">${row.Cantidad_Retrabajo}</td>
-                                     <td class="p-2 border text-center font-bold">${row.Cantidad_Scrap}</td>
-                                     <td class="p-2 border text-center font-bold">${row.Cantidad_Pendientes}</td>
-                                     </tr>`;
+                                    <td class="p-2 border">${row.NumeroParte}</td>
+                                    <td class="p-2 border">${row.Estacion}</td>
+                                    <td class="p-2 border">${row.Serial}</td>
+                                    <td class="p-2 border text-center font-bold">${row.Cantidad_OK}</td>
+                                    <td class="p-2 border text-center font-bold">${row.Cantidad_Retrabajo}</td>
+                                    <td class="p-2 border text-center font-bold">${row.Cantidad_Scrap}</td>
+                                    <td class="p-2 border text-center font-bold">${row.Cantidad_Pendientes}</td>
+                                  </tr>`;
                     });
                 }
                 tableHtml += '</tbody></table></div>';
@@ -665,6 +639,7 @@ try {
             }
         });
 
+        // --- Funciones de Exportación (Sin cambios) ---
         function exportTableToExcel(tableId, filename = '') {
             const table = document.getElementById(tableId);
             const wb = XLSX.utils.table_to_book(table, { sheet: "Resumen" });
@@ -705,3 +680,4 @@ try {
 </script>
 </body>
 </html>
+
