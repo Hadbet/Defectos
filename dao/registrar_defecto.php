@@ -103,6 +103,7 @@ try {
                 //Destinatarios
                 $mail->setFrom('kaizen.system@grammermx.com', 'Sistema de Calidad Grammer');
                 $mail->addAddress('hadbet.altamirano@grammer.com', 'Hadbet Altamirano');
+                $mail->addAddress('marco.liberio@grammer.com', 'Marco Liberio');
 
                 //Contenido del correo
                 $mail->isHTML(true);
