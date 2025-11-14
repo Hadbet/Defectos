@@ -590,14 +590,15 @@ try {
                              <table id="tabla-resumen" class="w-full text-left border-collapse">
                              <thead class="sticky top-0 bg-white shadow-sm">
                                <tr class="bg-slate-100">
-                                <th class="p-3 border">No. Parte</th>
-                                <th class="p-3 border">Estación</th>
-                                <th class="p-3 border">Serial</th>
-                                <th class="p-3 border text-center text-green-600">OK</th>
-                                <th class="p-3 border text-center text-yellow-600">Retrabajo</th>
-                                <th class="p-3 border text-center text-red-600">Scrap</th>
-                                <th class="p-3 border text-center text-orange-600">Pendiente</th>
-                               </tr>
+               <th class="p-3 border">No. Parte</th>
+               <th class="p-3 border">Estación</th>
+               <th class="p-3 border">Serial</th>
+               <th class="p-3 border text-center text-green-600">OK</th>
+               <th class="p-3 border text-center text-yellow-600">Retrabajo</th>
+               <th class="p-3 border text-center text-red-600">Scrap</th>
+               <th class="p-3 border text-center text-orange-600">Pendiente</th>
+               <th class="p-3 border text-center text-indigo-600">Total Retrabajados</th>
+             </tr>
                              </thead><tbody>`;
 
                 if (result.data.length === 0) {
@@ -605,14 +606,15 @@ try {
                 } else {
                     result.data.forEach(row => {
                         tableHtml += `<tr class="border-b">
-                                    <td class="p-2 border">${row.NumeroParte}</td>
-                                    <td class="p-2 border">${row.Estacion}</td>
-                                    <td class="p-2 border">${row.Serial}</td>
-                                    <td class="p-2 border text-center font-bold">${row.Cantidad_OK}</td>
-                                    <td class="p-2 border text-center font-bold">${row.Cantidad_Retrabajo}</td>
-                                    <td class="p-2 border text-center font-bold">${row.Cantidad_Scrap}</td>
-                                    <td class="p-2 border text-center font-bold">${row.Cantidad_Pendientes}</td>
-                                  </tr>`;
+              <td class="p-2 border">${row.NumeroParte}</td>
+              <td class="p-2 border">${row.Estacion}</td>
+              <td class="p-2 border">${row.Serial}</td>
+              <td class="p-2 border text-center font-bold">${row.Cantidad_OK}</td>
+              <td class="p-2 border text-center font-bold">${row.Cantidad_Retrabajo}</td>
+              <td class="p-2 border text-center font-bold">${row.Cantidad_Scrap}</td>
+              <td class="p-2 border text-center font-bold">${row.Cantidad_Pendientes}</td>
+              <td class="p-2 border text-center font-bold text-indigo-600">${row.Total_Piezas_Retrabajadas}</td>
+            </tr>`;
                     });
                 }
                 tableHtml += '</tbody></table></div>';

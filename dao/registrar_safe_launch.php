@@ -52,6 +52,20 @@ try {
         throw new Exception("Error al conectar a la base de datos: " . mysqli_connect_error());
     }
 
+    $checkSerialStmt = $conex->prepare("SELECT IdSafeLaunch FROM Safe_Launch WHERE Serial = ? AND NumeroParte = ? AND Linea = ?");
+    $checkSerialStmt->bind_param("sss", $input['serial'], $input['numeroParte'], $input['linea']);
+    $checkSerialStmt->execute();
+    $result = $checkSerialStmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $response['success'] = false;
+        $response['message'] = 'Este serial ya ha sido registrado previamente. Por favor, verifica la información.';
+        $checkSerialStmt->close();
+        echo json_encode($response);
+        exit;
+    }
+    $checkSerialStmt->close();
+
     $Object = new DateTime();
     $Object->setTimezone(new DateTimeZone('America/Denver'));
     $DateAndTime = $Object->format("Y-m-d H:i:s");

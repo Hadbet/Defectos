@@ -60,10 +60,10 @@ $lineas_disponibles = ["XNF", "BR167", "L234", "BMW G0S", "INSITU"];
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
             <div class="flex items-center">
-                <a href="index.php" class="flex-shrink-0 font-bold text-xl text-blue-600">GRAMMER</a>
+                <a href="index_safe.php" class="flex-shrink-0 font-bold text-xl text-blue-600">GRAMMER</a>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="index.php" class="text-slate-500 hover:bg-blue-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Inicio</a>
+                        <a href="index_safe.php" class="text-slate-500 hover:bg-blue-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Inicio</a>
                         <a href="#" class="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Reportes</a>
                     </div>
                 </div>
