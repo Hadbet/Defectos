@@ -259,10 +259,12 @@ try {
     document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('form-defecto');
         const nominaInput = document.getElementById('nomina');
+        const numeroParteInput = document.getElementById('numero-parte');
+        const serialInput = document.getElementById('serial');
         const tablaBody = document.getElementById('tabla-defectos-body');
         const linea = document.getElementById('linea').value;
 
-        // --- NUEVAS REFERENCIAS PARA EL BOTÓN Y SPINNER ---
+        // --- REFERENCIAS PARA EL BOTÓN Y SPINNER ---
         const submitButton = document.getElementById('submit-button');
         const buttonSpinner = document.getElementById('button-spinner');
         const buttonText = document.getElementById('button-text');
@@ -281,7 +283,82 @@ try {
             sortField: { field: "text", direction: "asc" }
         });
 
-        // --- NUEVAS FUNCIONES PARA CONTROLAR EL SPINNER ---
+        // --- NUEVA FUNCIÓN PARA BUSCAR NÚMERO DE PARTE ---
+        const buscarNumeroParte = async (serialCompleto) => {
+            // Extraer los primeros 12 caracteres
+            const cstNo = serialCompleto.substring(0, 12);
+
+            try {
+                const response = await fetch(`https://grammermx.com/calidad/defectos/dao/buscar_numero_parte.php?cstNo=${encodeURIComponent(cstNo)}`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    // Colocar el GrammerNo en el campo de número de parte
+                    numeroParteInput.value = result.data.GrammerNo;
+
+                    // Mostrar notificación de éxito
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Número de Parte Encontrado',
+                        text: `${result.data.GrammerNo} - ${result.data.Descripcion}`,
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                } else {
+                    // Si no se encuentra, limpiar el campo
+                    numeroParteInput.value = '';
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No Encontrado',
+                        text: 'No se encontró un número de parte con ese serial.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al buscar número de parte:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo buscar el número de parte.',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }
+        };
+
+        // --- EVENTO PARA EL CAMPO SERIAL ---
+        serialInput.addEventListener('blur', async function() {
+            const serialValue = this.value.trim();
+
+            // Solo buscar si el serial tiene al menos 12 caracteres
+            if (serialValue.length >= 12) {
+                await buscarNumeroParte(serialValue);
+            }
+        });
+
+        // También buscar cuando se presiona Enter en el campo serial
+        serialInput.addEventListener('keypress', async function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const serialValue = this.value.trim();
+
+                if (serialValue.length >= 12) {
+                    await buscarNumeroParte(serialValue);
+                    // Opcional: mover foco al siguiente campo o botón submit
+                    document.getElementById('codigo-defecto').focus();
+                }
+            }
+        });
+
+        // --- FUNCIONES PARA CONTROLAR EL SPINNER ---
         const showSpinner = () => {
             submitButton.disabled = true;
             buttonSpinner.classList.remove('hidden');
@@ -301,14 +378,13 @@ try {
                 case 0: return { text: 'DEFECTO', class: 'status-0' };
                 case 1: return { text: 'RETRABAJO', class: 'status-1' };
                 case 2: return { text: 'OK', class: 'status-2' };
-                case 3: return { text: 'SCRAPT', class: 'status-3' }; // 'Scrapt' como en tu BDD
+                case 3: return { text: 'SCRAPT', class: 'status-3' };
                 default: return { text: 'N/A', class: '' };
             }
         };
 
         const cargarDefectosDelDia = async () => {
             try {
-                // (El resto de la función es igual)
                 const response = await fetch(`https://grammermx.com/calidad/defectos/dao/obtener_safe_launch_dia.php?linea=${encodeURIComponent(linea)}`);
                 const result = await response.json();
 
@@ -334,20 +410,20 @@ try {
                                 `<button class="p-2 text-green-500 hover:text-green-700 btn-liberar" title="Liberar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></button>` :
                                 '';
                             row.innerHTML = `
-                            <td class="p-4 text-slate-500">${defecto.Hora}</td>
-                            <td class="p-4 font-medium">${defecto.Nomina}</td>
-                            <td class="p-4" data-field="numeroParte">${defecto.NumeroParte}</td>
-                            <td class="p-4" data-field="serial">${defecto.Serial}</td>
-                            <td class="p-4" data-field="estacion">${defecto.Estacion}</td>
-                            <td class="p-4 font-mono text-red-600">${defecto.CodigoDefecto}</td>
-                            <td class="p-4"><span class="status-badge ${estadoInfo.class}">${estadoInfo.text}</span></td>
-                            <td class="p-4 text-center">
-                                <div class="flex justify-center items-center space-x-2">
-                                    <button class="p-2 text-blue-500 hover:text-blue-700 btn-edit" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
-                                    ${liberarButtonHtml}
-                                    <button class="p-2 text-red-500 hover:text-red-700 btn-eliminar" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
-                                </div>
-                            </td>`;
+                        <td class="p-4 text-slate-500">${defecto.Hora}</td>
+                        <td class="p-4 font-medium">${defecto.Nomina}</td>
+                        <td class="p-4" data-field="numeroParte">${defecto.NumeroParte}</td>
+                        <td class="p-4" data-field="serial">${defecto.Serial}</td>
+                        <td class="p-4" data-field="estacion">${defecto.Estacion}</td>
+                        <td class="p-4 font-mono text-red-600">${defecto.CodigoDefecto}</td>
+                        <td class="p-4"><span class="status-badge ${estadoInfo.class}">${estadoInfo.text}</span></td>
+                        <td class="p-4 text-center">
+                            <div class="flex justify-center items-center space-x-2">
+                                <button class="p-2 text-blue-500 hover:text-blue-700 btn-edit" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                                ${liberarButtonHtml}
+                                <button class="p-2 text-red-500 hover:text-red-700 btn-eliminar" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
+                            </div>
+                        </td>`;
                             tablaBody.appendChild(row);
                         });
                     }
@@ -393,25 +469,11 @@ try {
                         showConfirmButton: false
                     });
 
-                    // --- MODIFICACIÓN AQUÍ ---
-                    // Guardar valores antes de resetear
-                    const nominaValue = nominaInput.value;
-                    const numeroParteValue = document.getElementById('numero-parte').value;
-                    const estacionValue = document.getElementById('estacion').value;
-                    const codigoDefectoValue = tomSelect.getValue();
-
-                    // Resetear solo el serial
+                    // Solo limpiar el serial
                     document.getElementById('serial').value = '';
-
-                    // Restaurar los valores guardados
-                    nominaInput.value = nominaValue;
-                    document.getElementById('numero-parte').value = numeroParteValue;
-                    document.getElementById('estacion').value = estacionValue;
-                    tomSelect.setValue(codigoDefectoValue);
 
                     // Mover el foco al campo serial
                     document.getElementById('serial').focus();
-                    // --- FIN DE MODIFICACIÓN ---
 
                     await cargarDefectosDelDia(); // Recargar tabla y contadores
                 } else {
@@ -420,7 +482,7 @@ try {
             } catch (error) {
                 Swal.fire({ icon: 'error', title: 'Error', text: error.message });
             } finally {
-                // 2. Ocultar Spinner (en try...finally para que se oculte SIEMPRE)
+                // 2. Ocultar Spinner
                 hideSpinner();
             }
         });
