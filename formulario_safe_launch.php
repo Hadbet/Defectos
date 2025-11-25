@@ -392,9 +392,27 @@ try {
                         timer: 1500,
                         showConfirmButton: false
                     });
-                    form.reset();
-                    tomSelect.clear();
-                    nominaInput.focus();
+
+                    // --- MODIFICACIÓN AQUÍ ---
+                    // Guardar valores antes de resetear
+                    const nominaValue = nominaInput.value;
+                    const numeroParteValue = document.getElementById('numero-parte').value;
+                    const estacionValue = document.getElementById('estacion').value;
+                    const codigoDefectoValue = tomSelect.getValue();
+
+                    // Resetear solo el serial
+                    document.getElementById('serial').value = '';
+
+                    // Restaurar los valores guardados
+                    nominaInput.value = nominaValue;
+                    document.getElementById('numero-parte').value = numeroParteValue;
+                    document.getElementById('estacion').value = estacionValue;
+                    tomSelect.setValue(codigoDefectoValue);
+
+                    // Mover el foco al campo serial
+                    document.getElementById('serial').focus();
+                    // --- FIN DE MODIFICACIÓN ---
+
                     await cargarDefectosDelDia(); // Recargar tabla y contadores
                 } else {
                     throw new Error(result.message);
