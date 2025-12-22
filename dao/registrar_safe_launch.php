@@ -115,32 +115,34 @@ try {
         $countStmt->close();
 
         // Si el defecto se ha registrado 3 o más veces, envía el correo.
-        if ($countRow && $countRow['count'] >= 3) {
-            $mail = new PHPMailer(true);
-            try {
-                //Configuración del servidor SMTP
-                $mail->isSMTP();
-                $mail->Host = 'smtp.hostinger.com';
-                $mail->SMTPAuth = true;
-                $mail->Username = 'kaizen.system@grammermx.com';
-                $mail->Password = 'Grammer2024.';
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-                $mail->Port = 465;
 
-                //Destinatarios
-                $mail->setFrom('kaizen.system@grammermx.com', 'Sistema de Calidad Grammer');
-                $mail->addAddress('hadbet.altamirano@grammer.com', 'Hadbet Altamirano');
-                $mail->addAddress('marco.liberio@grammer.com', 'Marco Liberio');
+        if ($codigoDefecto != '1' && $codigoDefecto != '2') {
+            if ($countRow && $countRow['count'] >= 3) {
+                $mail = new PHPMailer(true);
+                try {
+                    //Configuración del servidor SMTP
+                    $mail->isSMTP();
+                    $mail->Host = 'smtp.hostinger.com';
+                    $mail->SMTPAuth = true;
+                    $mail->Username = 'kaizen.system@grammermx.com';
+                    $mail->Password = 'Grammer2024.';
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                    $mail->Port = 465;
 
-                //Contenido del correo
-                $mail->isHTML(true);
-                $mail->CharSet = 'UTF-8';
-                $mail->Subject = "Alerta de Defecto Recurrente: " . $codigoDefecto;
-                // --- INICIO DE CORRECCIÓN ---
-                // Se corrigió el HTML del correo. Se reemplazaron las comillas dobles escapadas (\")
-                // por comillas simples (') para los atributos HTML (style, class).
-                // Esto evita que el correo se muestre como texto plano.
-                $mail->Body = "
+                    //Destinatarios
+                    $mail->setFrom('kaizen.system@grammermx.com', 'Sistema de Calidad Grammer');
+                    $mail->addAddress('hadbet.altamirano@grammer.com', 'Hadbet Altamirano');
+                    $mail->addAddress('marco.liberio@grammer.com', 'Marco Liberio');
+
+                    //Contenido del correo
+                    $mail->isHTML(true);
+                    $mail->CharSet = 'UTF-8';
+                    $mail->Subject = "Alerta de Defecto Recurrente: " . $codigoDefecto;
+                    // --- INICIO DE CORRECCIÓN ---
+                    // Se corrigió el HTML del correo. Se reemplazaron las comillas dobles escapadas (\")
+                    // por comillas simples (') para los atributos HTML (style, class).
+                    // Esto evita que el correo se muestre como texto plano.
+                    $mail->Body = "
                 <html>
                 <head>
                 <title>Alerta de Calidad</title>
@@ -191,14 +193,16 @@ try {
                  </div>
                 </body>
                 </html> ";
-                // --- FIN DE CORRECCIÓN ---
+                    // --- FIN DE CORRECCIÓN ---
 
-                $mail->send();
-                // enviarNotificacionTelegram($codigoDefecto, $input['numeroParte'], $input['estacion'], $countRow['count']);
-            } catch (Exception $e) {
-                $response['mail_error'] = "El defecto se registró, pero el correo no pudo ser enviado. Error: {$mail->ErrorInfo}";
+                    $mail->send();
+                    // enviarNotificacionTelegram($codigoDefecto, $input['numeroParte'], $input['estacion'], $countRow['count']);
+                } catch (Exception $e) {
+                    $response['mail_error'] = "El defecto se registró, pero el correo no pudo ser enviado. Error: {$mail->ErrorInfo}";
+                }
             }
         }
+
     } else {
         $response['message'] = 'No se pudo registrar el defecto.';
         $conex->rollback();
